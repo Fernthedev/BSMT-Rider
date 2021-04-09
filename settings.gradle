@@ -1,0 +1,3 @@
+rootProject.name = 'bsmt_rider'
+
+include ':protocol'
