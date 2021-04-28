@@ -40,13 +40,19 @@
       "description": "Mod version",
       "datatype": "text",
       "replaces": "$ModVersion$",
-      "defaultValue": "v1.0.0"
+      "defaultValue": "1.0.0"
     },
     "ModAuthor": {
       "type": "parameter",
       "description": "Mod Author",
       "datatype": "text",
       "replaces": "$ModAuthor$"
+    },
+    "ModDesc": {
+      "type": "parameter",
+      "description": "Mod Description",
+      "datatype": "text",
+      "replaces": "$ModDesc$"
     },
     "ModId": {
       "type": "parameter",
@@ -59,13 +65,33 @@
       "description": "Beat Saber Version",
       "datatype": "text",
       "replaces": "$BSVer$",
-      "defaultValue": "1.14"
+      "defaultValue": "1.14.0"
+    },
+    "ProjectHome": {
+      "type": "parameter",
+      "description": "Beat Saber Version",
+      "datatype": "text",
+      "replaces": "$ProjectHome$",
+      "defaultValue": ""
+    },
+    "ProjectSource": {
+      "type": "parameter",
+      "description": "Beat Saber Version",
+      "datatype": "text",
+      "replaces": "$ProjectSource$",
+      "defaultValue": ""
+    },
+    "DonateURL": {
+      "type": "parameter",
+      "description": "Beat Saber Version",
+      "datatype": "text",
+      "replaces": "$DonateURL$",
+      "defaultValue": ""
     }
   },
   "primaryOutputs": [
     { "path": "$safeprojectname$Controller.cs" },
     { "path": "PluginConfig.cs" },
-    { "path": "manifest.json" },
     { "path": "Plugin.cs" },
     { "path": "$safeprojectname$.csproj" },
     { "path": "$safeprojectname$.csproj.user" }
@@ -85,7 +111,7 @@
       "manualInstructions": [],
       "actionId": "84C0DA21-51C8-4541-9940-6CA19AF04EE6",
       "args": {
-        "files": "1;2;3;4"
+        "files": "1;2;3"
       },
       "continueOnError": true
     }
