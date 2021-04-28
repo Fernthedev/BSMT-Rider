@@ -11,8 +11,7 @@
   "tags": {
     "type": "project",
     "language": "C#",
-    "platform": ".NET",
-    "projectType": "games"
+    "platform": ".NET"
   },
   "sourceName": "$safeprojectname$",
   "preferNameDirectory": true,
@@ -26,7 +25,7 @@
       "datatype": "text",
       "replaces": "4.7.2",
       "isRequired": true,
-      "defaultValue": "4.7.2"
+      "defaultValue": "<FullTargetFramework>"
     },
     "PathToBeatSaber": {
       "type": "parameter",
