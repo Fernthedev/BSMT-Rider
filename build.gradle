@@ -188,6 +188,10 @@ prepareSandbox {
             if (!file.exists()) throw new RuntimeException("File ${file} does not exist")
         })
     }
+
+    into("${intellij.pluginName}/projectTemplates") {
+        from("projectTemplates")
+    }
 }
 
 publishPlugin {

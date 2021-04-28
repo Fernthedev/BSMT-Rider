@@ -1,13 +1,13 @@
 <Project>
 
   <PropertyGroup>
-    <SdkVersion>2020.2.0</SdkVersion>
+    <SdkVersion>2021.1.2</SdkVersion>
 
-    <Title>BSMT_Rider</Title>
+    <Title>BSMT-Rider</Title>
     <Description>Description</Description>
 
     <Authors>Author</Authors>
-    <Copyright>Copyright $([System.DateTime]::Now.Year) Maintainers of BSMT_Rider</Copyright>
+    <Copyright>Copyright $([System.DateTime]::Now.Year) Maintainers of BSMT-Rider</Copyright>
     <PackageTags>resharper plugin</PackageTags>
 
     <PackageProjectUrl></PackageProjectUrl>

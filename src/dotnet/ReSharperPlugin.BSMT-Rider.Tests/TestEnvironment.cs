@@ -12,12 +12,12 @@ using NUnit.Framework;
 namespace ReSharperPlugin.BSMT_Rider.Tests
 {
 
-    [ZoneDefinition]
-    public class BSMT_RiderTestEnvironmentZone : ITestsEnvZone, IRequire<PsiFeatureTestZone>, IRequire<IBSMT_RiderZone> { }
-
-    [ZoneMarker]
-    public class ZoneMarker : IRequire<ICodeEditingZone>, IRequire<ILanguageCSharpZone>, IRequire<BSMT_RiderTestEnvironmentZone> { }
-    
-    [SetUpFixture]
-    public class BSMT_RiderTestsAssembly : ExtensionTestEnvironmentAssembly<BSMT_RiderTestEnvironmentZone> { }
+    // [ZoneDefinition]
+    // public class BSMT_RiderTestEnvironmentZone : ITestsEnvZone, IRequire<PsiFeatureTestZone>, IRequire<IBSMT_RiderZone> { }
+    //
+    // [ZoneMarker]
+    // public class ZoneMarker : IRequire<ICodeEditingZone>, IRequire<ILanguageCSharpZone>, IRequire<BSMT_RiderTestEnvironmentZone> { }
+    //
+    // [SetUpFixture]
+    // public class BSMT_RiderTestsAssembly : ExtensionTestEnvironmentAssembly<BSMT_RiderTestEnvironmentZone> { }
 }

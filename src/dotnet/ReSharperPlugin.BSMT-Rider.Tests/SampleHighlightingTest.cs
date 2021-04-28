@@ -11,14 +11,14 @@ namespace ReSharperPlugin.BSMT_Rider.Tests
   {
     protected override string RelativeTestDataPath => "CSharp";
 
-    protected override bool HighlightingPredicate(
-      IHighlighting highlighting,
-      IPsiSourceFile sourceFile,
-      IContextBoundSettingsStore settingsStore)
-    {
-      return highlighting is SampleHighlighting;
-    }
-
-    [Test] public void TestSampleTest() { DoNamedTest2(); }
+    // protected override bool HighlightingPredicate(
+    //   IHighlighting highlighting,
+    //   IPsiSourceFile sourceFile,
+    //   IContextBoundSettingsStore settingsStore)
+    // {
+    //   return highlighting is SampleHighlighting;
+    // }
+    //
+    // [Test] public void TestSampleTest() { DoNamedTest2(); }
   }
 }

@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
+    <LangVersion>9</LangVersion>
+    <RootNamespace>ReSharperPlugin.BSMT-Rider</RootNamespace>
   </PropertyGroup>
 
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
@@ -15,6 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="JetBrains.ReSharper.SDK" Version="$(SdkVersion)" PrivateAssets="all" />
+    <PackageReference Include="JetBrains.ReSharperAutomationTools.src.ReSharperHost" Version="211.0.20210422.95758" />
     <!-- TODO: https://github.com/NuGet/Home/issues/7154 -->
     <PackageReference Include="Wave" Version="[$(WaveVersion),$(UpperWaveVersion))" />
   </ItemGroup>

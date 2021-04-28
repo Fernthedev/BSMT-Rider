@@ -4,6 +4,7 @@ using JetBrains.ReSharper.ExternalSources.Resources;
 using JetBrains.ReSharper.Psi;
 using JetBrains.UI.Icons;
 
+
 namespace ReSharperPlugin.BSMT_Rider
 {
     [SolutionComponent]

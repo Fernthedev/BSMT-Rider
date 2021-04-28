@@ -1,0 +1,12 @@
+﻿{
+  "$schema": "https://raw.githubusercontent.com/bsmg/BSIPA-MetadataFileSchema/master/Schema.json",
+  "id": "$safeprojectname$",
+  "name": "$ModId$",
+  "author": "",
+  "version": "$ModVersion$",
+  "description": "",
+  "gameVersion": "$BSVer$",
+  "dependsOn": {
+    "BSIPA": "^4.1.3"
+  }
+}

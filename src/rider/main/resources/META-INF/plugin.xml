@@ -2,17 +2,20 @@
   <id>bsmt_rider-rider</id>
   <name>BSMT_Rider</name>
   <version>_PLACEHOLDER_</version>
-  <vendor url="https://project-url">Author</vendor>
+  <vendor url="https://project-url">Fernthedev</vendor>
   <idea-version since-build="_PLACEHOLDER_" until-build="_PLACEHOLDER_" />
   <depends>com.intellij.modules.rider</depends>
 
   <description>
 <![CDATA[
-<p>Sample description</p>
+<p>Beat Saber Modding Tools, but for Rider!</p>
+<p>This is going to be cursed</p>
 ]]>
   </description>
 
   <extensions defaultExtensionNs="com.intellij">
+    <moduleType id="MY_MODULE" implementationClass="com.github.fernthedev.bsmt_rider.BSMTModuleType"/>
+    <moduleBuilder builderClass="com.github.fernthedev.bsmt_rider.BSMTModuleBuilder"/>
     <applicationConfigurable groupId="language" instance="com.jetbrains.rider.plugins.bsmt_rider.SampleOptionsPage" id="SampleOptionsPage" />
   </extensions>
 

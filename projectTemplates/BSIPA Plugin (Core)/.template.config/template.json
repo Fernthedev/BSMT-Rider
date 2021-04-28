@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Zingabopp & Fernthedev",
+  "name": "BSIPA4 Plugin (Core)",
+  "description": "A basic template for a new Beat Saber IPA plugin.",
+  "defaultName": "BSPlugin",
+  "classifications": ["Common", "Library", "BSMT", "games"],
+  "identity": "BSMT_Rider",
+  "groupIdentity": "Fernthedev.BSMT",
+  "shortName": "bsplugin",
+  "tags": {
+    "type": "project",
+    "language": "C#",
+    "platform": ".NET",
+    "projectType": "games"
+  },
+  "sourceName": "$safeprojectname$",
+  "preferNameDirectory": true,
+  "guids": [
+    "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"
+  ],
+  "symbols": {
+    "Framework": {
+      "type": "parameter",
+      "description": "The target framework for the project.",
+      "datatype": "text",
+      "replaces": "4.7.2",
+      "isRequired": true,
+      "defaultValue": "4.7.2"
+    },
+    "PathToBeatSaber": {
+      "type": "parameter",
+      "description": "Path to BeatSaber directory. May require a \\ at the end",
+      "datatype": "text",
+      "isRequired": true,
+      "replaces": "$SomeBeatSaberDir$"
+    },
+    "ModVersion": {
+      "type": "parameter",
+      "description": "Mod version",
+      "datatype": "text",
+      "replaces": "$ModVersion$",
+      "defaultValue": "v1.0.0"
+    },
+    "ModAuthor": {
+      "type": "parameter",
+      "description": "Mod Author",
+      "datatype": "text",
+      "replaces": "$ModAuthor$"
+    },
+    "ModId": {
+      "type": "parameter",
+      "description": "Mod ID, should be unique",
+      "datatype": "text",
+      "replaces": "$ModId$"
+    },
+    "BeatSaberVersion": {
+      "type": "parameter",
+      "description": "Beat Saber Version",
+      "datatype": "text",
+      "replaces": "$BSVer$",
+      "defaultValue": "1.14"
+    }
+  },
+  "primaryOutputs": [
+    { "path": "$safeprojectname$Controller.cs" },
+    { "path": "PluginConfig.cs" },
+    { "path": "manifest.json" },
+    { "path": "Plugin.cs" },
+    { "path": "$safeprojectname$.csproj" },
+    { "path": "$safeprojectname$.csproj.user" }
+  ],
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "include": "*.csproj.user"
+        }
+      ]
+    }
+  ],
+  "postActions": [
+    {
+      "description": "Opens the four script files",
+      "manualInstructions": [],
+      "actionId": "84C0DA21-51C8-4541-9940-6CA19AF04EE6",
+      "args": {
+        "files": "1;2;3;4"
+      },
+      "continueOnError": true
+    }
+  ]
+}
