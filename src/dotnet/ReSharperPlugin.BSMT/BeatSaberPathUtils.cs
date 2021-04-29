@@ -31,9 +31,10 @@ namespace ReSharperPlugin.BSMT_Rider
 
         private static readonly string STEAM_PATH_KEY = Path.Combine("SOFTWARE", "WOW6432Node", "Valve", "Steam");
 
-        [CanBeNull]
-        public static string GetInstallDir()
+
+        public static List<string> GetInstallDir()
         {
+            List<String> paths = new List<string>();
 
             var InstallDir = "";
 
@@ -42,7 +43,7 @@ namespace ReSharperPlugin.BSMT_Rider
                 && Directory.Exists(Path.Combine(InstallDir, "Beat Saber_Data", "Plugins"))
                 && File.Exists(Path.Combine(InstallDir, "Beat Saber.exe")))
             {
-                return InstallDir;
+                paths.Add(InstallDir);
             }
 
             try
@@ -56,7 +57,7 @@ namespace ReSharperPlugin.BSMT_Rider
 
             if (!string.IsNullOrEmpty(InstallDir))
             {
-                return InstallDir;
+                paths.Add(InstallDir);
             }
 
             try
@@ -70,7 +71,7 @@ namespace ReSharperPlugin.BSMT_Rider
 
             if (!string.IsNullOrEmpty(InstallDir))
             {
-                return InstallDir;
+                paths.Add(InstallDir);
             }
 
             try
@@ -79,7 +80,7 @@ namespace ReSharperPlugin.BSMT_Rider
                 {
                     if (!string.IsNullOrEmpty(InstallDir))
                     {
-                        return InstallDir;
+                        paths.Add(InstallDir);
                     }
                     InstallDir = FindBeatSaberInOculusLibrary(path);
                 }
@@ -89,7 +90,12 @@ namespace ReSharperPlugin.BSMT_Rider
                 // ignored
             }
 
-            return !string.IsNullOrEmpty(InstallDir) ? InstallDir : null;
+            if (!string.IsNullOrEmpty(InstallDir))
+            {
+                paths.Add(InstallDir);
+            }
+
+            return paths;
         }
 
         // Umbra's code

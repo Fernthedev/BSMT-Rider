@@ -20,3 +20,4 @@ output
 .vs
 _ReSharper*
 _dotTrace*
+.idea/sonarlint/

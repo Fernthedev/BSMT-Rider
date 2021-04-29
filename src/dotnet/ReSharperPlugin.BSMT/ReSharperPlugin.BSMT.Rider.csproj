@@ -8,7 +8,7 @@
 
     <PropertyGroup>
         <TargetFramework>net461</TargetFramework>
-        <AssemblyName>ReSharperPlugin.BSMT-Rider</AssemblyName>
+        <AssemblyName>ReSharperPlugin.BSMT</AssemblyName>
         <RootNamespace>$(AssemblyName)</RootNamespace>
         <IsPackable>false</IsPackable>
         <DefineConstants>$(DefineConstants);RIDER</DefineConstants>

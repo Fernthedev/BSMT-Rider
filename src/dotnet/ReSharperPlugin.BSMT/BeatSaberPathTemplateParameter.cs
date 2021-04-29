@@ -30,16 +30,11 @@ namespace ReSharperPlugin.BSMT_Rider
             var possiblePaths = BeatSaberPathUtils.GetInstallDir();
             var options = new List<RdProjectTemplateGroupOption>();
 
-            if (!possiblePaths.IsNullOrEmpty())
+            foreach (var path in possiblePaths)
             {
-                var optionContext = new Dictionary<string, string>(context) {{Name, possiblePaths}};
+                var optionContext = new Dictionary<string, string>(context) {{Name, path}};
                 var content1 = factory.CreateNextParameters(new[] {expander}, index + 1, optionContext);
-
-                options.Add(new RdProjectTemplateGroupOption(
-                    possiblePaths,
-                    possiblePaths,
-                    null,
-                    content1));
+                options.Add(new RdProjectTemplateGroupOption(path, path, null, content1));
             }
 
             var customPathBox = new RdProjectTemplateTextParameter(Name, "Custom path", null, Tooltip,
@@ -53,7 +48,7 @@ namespace ReSharperPlugin.BSMT_Rider
                 customPathBox));
 
             return new RdProjectTemplateGroupParameter(Name, "BeatSaberPath",
-                !possiblePaths.IsNullOrEmpty() ? possiblePaths : string.Empty, null, options);
+                !possiblePaths.Any() ? possiblePaths.Last() : string.Empty, null, options);
         }
     }
 

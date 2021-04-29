@@ -3,7 +3,7 @@
   <PropertyGroup>
     <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
     <LangVersion>9</LangVersion>
-    <RootNamespace>ReSharperPlugin.BSMT-Rider</RootNamespace>
+    <RootNamespace>ReSharperPlugin.BSMT</RootNamespace>
   </PropertyGroup>
 
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />

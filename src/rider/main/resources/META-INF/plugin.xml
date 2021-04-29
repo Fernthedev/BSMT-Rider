@@ -14,8 +14,6 @@
   </description>
 
   <extensions defaultExtensionNs="com.intellij">
-    <moduleType id="MY_MODULE" implementationClass="com.github.fernthedev.bsmt_rider.BSMTModuleType"/>
-    <moduleBuilder builderClass="com.github.fernthedev.bsmt_rider.BSMTModuleBuilder"/>
     <applicationConfigurable groupId="language" instance="com.jetbrains.rider.plugins.bsmt_rider.SampleOptionsPage" id="SampleOptionsPage" />
   </extensions>
 
