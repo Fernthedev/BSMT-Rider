@@ -17,9 +17,22 @@
     <applicationConfigurable groupId="language" instance="com.jetbrains.rider.plugins.bsmt_rider.SampleOptionsPage" id="SampleOptionsPage" />
   </extensions>
 
+  <project-components>
+    <component>
+      <implementation-class>com.github.fernthedev.bsmt_rider.BeatSaberGenerator</implementation-class>
+    </component>
+  </project-components>
+
   <actions>
     <action id="SampleAction" class="com.jetbrains.rider.plugins.bsmt_rider.SampleAction"
             text="Do Something" description="Do Something Description">
+    </action>
+    <action
+            id="BSMTRider.generateUserCsProj"
+            class="com.github.fernthedev.bsmt_rider.actions.UserCSProjAction"
+            text="Generate Project user.csproj"
+            description="Generate a user.csproj">
+      <add-to-group group-id="ToolsMenu" anchor="last"/>
     </action>
   </actions>
 
