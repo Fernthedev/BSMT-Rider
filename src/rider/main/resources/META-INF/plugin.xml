@@ -17,6 +17,10 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <applicationConfigurable groupId="language" instance="com.jetbrains.rider.plugins.bsmt_rider.SampleOptionsPage" id="SampleOptionsPage" />
+    <applicationService serviceImplementation="com.github.fernthedev.bsmt_rider.settings.AppSettingsState"/>
+    <applicationConfigurable parentId="tools" instance="com.github.fernthedev.bsmt_rider.settings.AppSettingsConfigurable"
+                             id="com.github.fernthedev.bsmt_rider.settings.AppSettingsConfigurable"
+                             displayName="BSMT Rider: Settings"/>
   </extensions>
 
   <project-components>

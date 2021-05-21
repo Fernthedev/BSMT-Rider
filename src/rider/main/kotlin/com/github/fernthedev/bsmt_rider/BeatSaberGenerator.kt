@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.xml.XmlFactory
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.dataformat.xml.util.DefaultXmlPrettyPrinter
+import com.github.fernthedev.bsmt_rider.settings.AppSettingsState
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
@@ -158,7 +159,7 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
             // Modify
             val propertyGroupNodePre: JsonNode? = xmlData["PropertyGroup"]
             val propertyGroupNode: ObjectNode
-            if (propertyGroupNodePre == null || propertyGroupNodePre.isNull || !(propertyGroupNodePre is ObjectNode)) {
+            if (propertyGroupNodePre == null || propertyGroupNodePre.isNull || propertyGroupNodePre !is ObjectNode) {
                 propertyGroupNode = mapper.createObjectNode()
                 xmlData.set<ObjectNode>("PropertyGroup", propertyGroupNode)
             } else {
@@ -224,7 +225,7 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
         // TODO: This is temporary
         // TODO: Make a setting
         private fun getBeatSaberFolder(): String {
-            return "F:\\SteamLibrary\\steamapps\\common\\Beat Saber"
+            return AppSettingsState.instance.defaultFolder ?: "BeatSaberDir! Tacos are pog"
         }
 
         private fun generateFileContent(beatSaberFolder: String): String {
