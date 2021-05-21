@@ -11,7 +11,7 @@ class UserCSProjAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.getData(CommonDataKeys.PROJECT)
 
-        if (project != null) {
+        if (project != null && BeatSaberGenerator.isBeatSaberProject(project)) {
             BeatSaberGenerator.generate(project)
         }
     }
@@ -20,5 +20,6 @@ class UserCSProjAction : AnAction() {
         val project = e.getData(CommonDataKeys.PROJECT)
 
         e.presentation.isEnabledAndVisible = project?.hasSolution == true
+        e.presentation.isEnabled = e.presentation.isVisible && BeatSaberGenerator.isBeatSaberProject(project)
     }
 }

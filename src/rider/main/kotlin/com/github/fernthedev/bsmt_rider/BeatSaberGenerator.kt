@@ -49,7 +49,7 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
                 val folder = getProjectFolder(project)
                 val userFile = getUserCsprojFile(project)
 
-                if (folder.exists()) {
+                if (folder.exists() && isBeatSaberProject(project)) {
                     if (userFile.exists()) {
                         updateFileContent(userFile)
                     } else {
@@ -66,6 +66,22 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
             }
         }
 
+        // TODO: Make this more performant
+        fun isBeatSaberProject(project: Project?): Boolean {
+            if (project == null) return false;
+
+            val file = getCsprojFile(project)
+
+            if (!file.exists()) return false
+
+            var contents = ""
+            ApplicationManager.getApplication().runReadAction {
+                contents = VfsUtil.loadText(VfsUtil.findFileByIoFile(file, true)!!)
+            }
+            
+            return contents.contains("IPA.Loader")
+        }
+
         // This code is problematic since it assumes that project name, folder and csproj name are all equal. We need a fix
         private fun getProjectFolder(project: Project): File {
             return File(File(project.solutionPath).parentFile, project.name)
@@ -79,6 +95,8 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
             return File(getProjectFolder(project), "${project.name}.csproj.user")
         }
 
+        // TODO: Clean this up using POJO if possible.
+        // This merges the previous XML data with the new one
         private fun updateFileContent(userCsprojFile: File) {
             val file = VfsUtil.findFileByIoFile(userCsprojFile, true)!!
 
@@ -159,14 +177,14 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
                     }
 
                     finalString
-                        .append(contents.substring(0, startIndex - 1)) // Head
+                        .append(contents.substring(0, startIndex - 1)).append("\n") // Head
                         .append(body) // Body
                         .append(end) // End
                 }
                 // Project was never defined
                 startIndex < 0 -> {
                     finalString
-                        .append(contents)
+                        .append(contents).append("\n")
                         .append(body)
                 }
                 // Project was first
@@ -190,6 +208,8 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
 
         }
 
+        // TODO: This is temporary
+        // TODO: Make a setting
         private fun getBeatSaberFolder(): String {
             return "F:\\SteamLibrary\\steamapps\\common\\Beat Saber"
         }
