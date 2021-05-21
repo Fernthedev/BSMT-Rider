@@ -11,14 +11,14 @@ import com.github.fernthedev.bsmt_rider.settings.AppSettingsState
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.workspaceModel.ide.WorkspaceModel
 import com.jetbrains.rd.platform.util.idea.ProtocolSubscribedProjectComponent
-import com.jetbrains.rd.util.reactive.IMutableViewableMap
 import com.jetbrains.rd.util.reactive.whenTrue
 import com.jetbrains.rider.model.RdCustomLocation
 import com.jetbrains.rider.model.RdProjectDescriptor
-import com.jetbrains.rider.model.RdProjectModelItem
-import com.jetbrains.rider.model.projectModelView
 import com.jetbrains.rider.projectView.solution
+import com.jetbrains.rider.projectView.workspace.ProjectModelEntity
+import com.jetbrains.rider.projectView.workspace.findProjects
 import java.io.File
 
 
@@ -30,8 +30,7 @@ data class BeatSaberFolders(
 class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(project) {
     init {
         project.solution.isLoaded.whenTrue(projectComponentLifetime) {
-            val solution = project.solution
-            locateFoldersAndGenerate(solution.projectModelView.items)
+            locateFolders(WorkspaceModel.getInstance(project).findProjects())
         }
     }
 
@@ -41,12 +40,12 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
             .defaultPrettyPrinter(DefaultXmlPrettyPrinter())
             .build()
 
-        fun locateFolders(items: IMutableViewableMap<Int, RdProjectModelItem>?): List<BeatSaberFolders> {
+        fun locateFolders(items: List<ProjectModelEntity>?): List<BeatSaberFolders> {
             if (items == null)
                 return emptyList()
 
             val folders = mutableListOf<BeatSaberFolders>()
-            items.forEach { (_, projectData) ->
+            items.forEach { projectData ->
                 println("Project: ${projectData.descriptor.name}")
 
 
@@ -67,7 +66,7 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
             return folders
         }
 
-        fun locateFoldersAndGenerate(items: IMutableViewableMap<Int, RdProjectModelItem>) {
+        fun locateFoldersAndGenerate(items: List<ProjectModelEntity>?) {
             locateFolders(items).forEach {
                 generate(it.projectFolder, it.csprojFile)
             }

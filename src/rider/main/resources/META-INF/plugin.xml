@@ -1,10 +1,9 @@
 <idea-plugin require-restart="true">
-  <id>bsmt_rider-rider</id>
+  <id>bsmt_rider</id>
   <name>BSMT_Rider</name>
   <version>_PLACEHOLDER_</version>
   <vendor url="https://project-url">Fernthedev</vendor>
-  <idea-version since-build="_PLACEHOLDER_" until-build="_PLACEHOLDER_" />
-  <depends>com.intellij.modules.rider</depends>
+  <idea-version since-build="2021.1"/>
 
   <description>
 <![CDATA[
@@ -16,7 +15,6 @@
   <depends>com.intellij.modules.rider</depends>
 
   <extensions defaultExtensionNs="com.intellij">
-    <applicationConfigurable groupId="language" instance="com.jetbrains.rider.plugins.bsmt_rider.SampleOptionsPage" id="SampleOptionsPage" />
     <applicationService serviceImplementation="com.github.fernthedev.bsmt_rider.settings.AppSettingsState"/>
     <applicationConfigurable parentId="tools" instance="com.github.fernthedev.bsmt_rider.settings.AppSettingsConfigurable"
                              id="com.github.fernthedev.bsmt_rider.settings.AppSettingsConfigurable"
@@ -30,9 +28,6 @@
   </project-components>
 
   <actions>
-    <action id="SampleAction" class="com.jetbrains.rider.plugins.bsmt_rider.SampleAction"
-            text="Do Something" description="Do Something Description">
-    </action>
     <action
             id="BSMTRider.generateUserCsProj"
             class="com.github.fernthedev.bsmt_rider.actions.UserCSProjAction"
