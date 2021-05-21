@@ -1,8 +1,13 @@
 package com.github.fernthedev.bsmt_rider
 
+import com.ctc.wstx.stax.WstxInputFactory
+import com.ctc.wstx.stax.WstxOutputFactory
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.dataformat.xml.XmlFactory
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
+import com.fasterxml.jackson.dataformat.xml.util.DefaultXmlPrettyPrinter
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.jetbrains.rd.platform.ui.bedsl.extensions.valueOrEmpty
@@ -21,7 +26,8 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
 
     companion object {
         // with Jackson 2.10 and later
-        private val mapper = XmlMapper.builder() // possible configuration changes
+        private val mapper = XmlMapper.builder(XmlFactory(WstxInputFactory(), WstxOutputFactory())) // possible configuration changes
+            .defaultPrettyPrinter(DefaultXmlPrettyPrinter())
             .build()
 
         fun generate(project: Project) {
@@ -71,9 +77,14 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
         private fun updateFileContent(userCsprojFile: File) {
             val file = VfsUtil.findFileByIoFile(userCsprojFile, true)!!
 
-            val contents = VfsUtil.loadText(file)
+            var contents = ""
+            ApplicationManager.getApplication().runReadAction {
+                contents = VfsUtil.loadText(file)
+            }
 
-            val beatSaberFolder = getBeatSaberFolder();
+
+
+            val beatSaberFolder = getBeatSaberFolder()
 
             // Skip if user.csproj already contains reference
             if (contents.trimIndent().contains(
@@ -84,21 +95,94 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
                 return
             }
 
-            val xmlData = mapper.readTree(contents) as (ObjectNode)
 
-            val projectNode = xmlData["Project"]
-            if (projectNode.isNull)
-                xmlData.set<JsonNode>("Project", mapper.createObjectNode())
+            val startIndex = contents.indexOf("<Project>")
+            val endString = "</Project>"
+            val endIndex = contents.indexOf(endString) + endString.length
 
-            val propertyGroupNode = projectNode["PropertyGroup"]
-            if (propertyGroupNode.isNull)
-                xmlData.set<JsonNode>("PropertyGroup", mapper.createObjectNode())
+            var parsedContent = contents
+
+            // Get from the start of project to end of file
+            if (startIndex != 0 && startIndex > 0) {
+                parsedContent = contents.substring(startIndex, endIndex)
+            }
+
+            // Trim end to end of </Project>
+            if (endIndex != contents.lastIndex)
+                parsedContent = parsedContent.substring(0, parsedContent.indexOf(endString) + endString.length)
+
+            val xmlPreData = mapper.readTree(parsedContent)
+
+            val xmlData: ObjectNode = if (xmlPreData is ObjectNode) {
+                xmlPreData
+            } else {
+                mapper.createObjectNode()
+            }
+
+            // Modify
+            val propertyGroupNodePre: JsonNode? = xmlData["PropertyGroup"]
+            val propertyGroupNode: ObjectNode
+            if (propertyGroupNodePre == null || propertyGroupNodePre.isNull || !(propertyGroupNodePre is ObjectNode)) {
+                propertyGroupNode = mapper.createObjectNode()
+                xmlData.set<ObjectNode>("PropertyGroup", propertyGroupNode)
+            } else {
+                propertyGroupNode = propertyGroupNodePre
+            }
 
             val node = mapper.createArrayNode();
 
             node.add(beatSaberFolder)
 
-            xmlData.set<JsonNode>("BeatSaberDir", node)
+            propertyGroupNode.set<JsonNode>("BeatSaberDir", node)
+
+            val writer = mapper.writer().withDefaultPrettyPrinter().withRootName("Project")
+
+            // Merge xml
+            val body = writer.writeValueAsString(xmlData)
+
+            // This will merge the contents of the XML and new XML
+            val finalString = StringBuilder()
+
+            when {
+                // Merge XML
+                startIndex > 0 -> {
+
+                    val end = if (endIndex != contents.lastIndex && endIndex + 1 < contents.lastIndex) {
+                        contents.substring(endIndex + 1, contents.lastIndex)
+                    } else {
+                        ""
+                    }
+
+                    finalString
+                        .append(contents.substring(0, startIndex - 1)) // Head
+                        .append(body) // Body
+                        .append(end) // End
+                }
+                // Project was never defined
+                startIndex < 0 -> {
+                    finalString
+                        .append(contents)
+                        .append(body)
+                }
+                // Project was first
+                else -> {
+                    val end = if (endIndex != contents.lastIndex && endIndex + 1 < contents.lastIndex) {
+                        contents.substring(endIndex + 1, contents.lastIndex)
+                    } else {
+                        ""
+                    }
+
+                    finalString.append(body)
+                        .append(end)
+                }
+            }
+
+            ApplicationManager.getApplication().invokeLaterOnWriteThread {
+                ApplicationManager.getApplication().runWriteAction {
+                    VfsUtil.saveText(file, finalString.toString())
+                }
+            }
+
         }
 
         private fun getBeatSaberFolder(): String {
