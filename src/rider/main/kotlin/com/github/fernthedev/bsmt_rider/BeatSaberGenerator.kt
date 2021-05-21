@@ -54,8 +54,13 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
                         updateFileContent(userFile)
                     } else {
                         val content = generateFileContent(getBeatSaberFolder())
-                        userFile.createNewFile()
-                        VfsUtil.saveText(VfsUtil.findFileByIoFile(userFile, true)!!, content)
+
+                        ApplicationManager.getApplication().invokeLaterOnWriteThread {
+                            ApplicationManager.getApplication().runWriteAction {
+                                userFile.createNewFile()
+                                VfsUtil.saveText(VfsUtil.findFileByIoFile(userFile, true)!!, content)
+                            }
+                        }
                     }
                 }
             }
