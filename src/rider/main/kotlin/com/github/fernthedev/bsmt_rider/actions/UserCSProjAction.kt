@@ -13,9 +13,7 @@ class UserCSProjAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.getData(CommonDataKeys.PROJECT)
 
-        if (project != null && project.hasSolution &&
-            BeatSaberGenerator.locateFolders(project.solution.projectModelView.items)
-                .any { BeatSaberGenerator.isBeatSaberProject(it.csprojFile) }) {
+        if (project != null && e.presentation.isEnabledAndVisible) {
             val solution = project.solution
             BeatSaberGenerator.locateFoldersAndGenerate(solution.projectModelView.items)
         }
