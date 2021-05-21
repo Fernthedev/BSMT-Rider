@@ -81,12 +81,16 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
                 if (userFile.exists()) {
                     updateFileContent(userFile)
                 } else {
-                    val content = generateFileContent(getBeatSaberFolder())
+                    val userString = getBeatSaberFolder()
 
-                    ApplicationManager.getApplication().invokeLaterOnWriteThread {
-                        ApplicationManager.getApplication().runWriteAction {
-                            userFile.createNewFile()
-                            VfsUtil.saveText(VfsUtil.findFileByIoFile(userFile, true)!!, content)
+                    if (userString != null) {
+                        val content = generateFileContent(userString)
+
+                        ApplicationManager.getApplication().invokeLaterOnWriteThread {
+                            ApplicationManager.getApplication().runWriteAction {
+                                userFile.createNewFile()
+                                VfsUtil.saveText(VfsUtil.findFileByIoFile(userFile, true)!!, content)
+                            }
                         }
                     }
                 }
@@ -112,16 +116,14 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
         // TODO: Clean this up using POJO if possible.
         // This merges the previous XML data with the new one
         private fun updateFileContent(userCsprojFile: File) {
+            val beatSaberFolder = getBeatSaberFolder() ?: return
+
             val file = VfsUtil.findFileByIoFile(userCsprojFile, true)!!
 
             var contents = ""
             ApplicationManager.getApplication().runReadAction {
                 contents = VfsUtil.loadText(file)
             }
-
-
-
-            val beatSaberFolder = getBeatSaberFolder()
 
             // Skip if user.csproj already contains reference
             if (contents.trimIndent().contains(
@@ -222,10 +224,9 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
 
         }
 
-        // TODO: This is temporary
-        // TODO: Make a setting
-        private fun getBeatSaberFolder(): String {
-            return AppSettingsState.instance.defaultFolder ?: "BeatSaberDir! Tacos are pog"
+        private fun getBeatSaberFolder(project: Project? = null): String? {
+            val instance = AppSettingsState.instance
+            return instance.defaultFolder ?: AppSettingsState.instance.getBeatSaberDir(project)
         }
 
         private fun generateFileContent(beatSaberFolder: String): String {

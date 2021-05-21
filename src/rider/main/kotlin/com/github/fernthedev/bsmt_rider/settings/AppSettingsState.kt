@@ -1,9 +1,11 @@
 package com.github.fernthedev.bsmt_rider.settings
 
+import com.github.fernthedev.bsmt_rider.dialogue.BeatSaberChooseDialogue
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
+import com.intellij.openapi.project.Project
 import com.intellij.util.xmlb.XmlSerializerUtil
 
 
@@ -17,6 +19,23 @@ class AppSettingsState : PersistentStateComponent<AppSettingsState> {
     var beatSaberFolders: Array<String> = emptyArray()
     var useDefaultFolder = false
     var defaultFolder: String? = null
+
+    fun getBeatSaberDir(project: Project?) : String? {
+        if (useDefaultFolder && defaultFolder != null)
+            return defaultFolder!!
+
+        val dialogue = BeatSaberChooseDialogue(project)
+
+        if (dialogue.showAndGet()) {
+
+            val str = dialogue.beatSaberInput.selectedItem as String
+
+            if (str.isNotEmpty())
+                return str
+        }
+
+        return null
+    }
 
     override fun getState(): AppSettingsState {
         return this
