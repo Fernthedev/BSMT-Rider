@@ -103,7 +103,9 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
                 contents = VfsUtil.loadText(VfsUtil.findFileByIoFile(file, true)!!)
             }
             
-            return contents.contains("IPA.Loader")
+            return contents.contains("IPA.Loader") ||
+                    contents.contains("BeatSaberModdingTools.Tasks") ||
+                    contents.contains("$(BeatSaberDir)")
         }
 
         // TODO: Clean this up using POJO if possible.
