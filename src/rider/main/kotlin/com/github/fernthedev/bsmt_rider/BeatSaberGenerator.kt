@@ -10,18 +10,28 @@ import com.fasterxml.jackson.dataformat.xml.util.DefaultXmlPrettyPrinter
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
-import com.jetbrains.rd.platform.ui.bedsl.extensions.valueOrEmpty
 import com.jetbrains.rd.platform.util.idea.ProtocolSubscribedProjectComponent
-import com.jetbrains.rider.model.runnableProjectsModel
-import com.jetbrains.rider.projectView.hasSolution
+import com.jetbrains.rd.util.reactive.IMutableViewableMap
+import com.jetbrains.rd.util.reactive.whenTrue
+import com.jetbrains.rider.model.RdCustomLocation
+import com.jetbrains.rider.model.RdProjectDescriptor
+import com.jetbrains.rider.model.RdProjectModelItem
+import com.jetbrains.rider.model.projectModelView
 import com.jetbrains.rider.projectView.solution
-import com.jetbrains.rider.projectView.solutionPath
 import java.io.File
 
 
+data class BeatSaberFolders(
+    val csprojFile: File,
+    val projectFolder: File,
+)
+
 class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(project) {
     init {
-        generate(project)
+        project.solution.isLoaded.whenTrue(projectComponentLifetime) {
+            val solution = project.solution
+            locateFoldersAndGenerate(solution.projectModelView.items)
+        }
     }
 
     companion object {
@@ -30,36 +40,52 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
             .defaultPrettyPrinter(DefaultXmlPrettyPrinter())
             .build()
 
-        fun generate(project: Project) {
-            if (project.projectFile?.extension == "csproj.user") {
-                updateFileContent(getUserCsprojFile(project))
-                return
+        fun locateFolders(items: IMutableViewableMap<Int, RdProjectModelItem>?): List<BeatSaberFolders> {
+            if (items == null)
+                return emptyList()
+
+            val folders = mutableListOf<BeatSaberFolders>()
+            items.forEach { (_, projectData) ->
+                println("Project: ${projectData.descriptor.name}")
+
+
+                val location = projectData.descriptor.location
+
+                if (location is RdCustomLocation && location.customLocation.endsWith(".csproj")
+                    && projectData.descriptor is RdProjectDescriptor
+                ) {
+                    val projectRdData: RdProjectDescriptor = projectData.descriptor as RdProjectDescriptor
+                    val csprojFile = File(location.customLocation)
+
+                    val projFolder = File(projectRdData.baseDirectory ?: csprojFile.parent)
+
+                    folders.add(BeatSaberFolders(csprojFile, projFolder))
+                }
             }
 
-            if (project.hasSolution) {
+            return folders
+        }
 
-                val solution = project.solution
-                val projectsInSolution = solution.runnableProjectsModel.projects;
+        fun locateFoldersAndGenerate(items: IMutableViewableMap<Int, RdProjectModelItem>) {
+            locateFolders(items).forEach {
+                generate(it.projectFolder, it.csprojFile)
+            }
+        }
 
-                projectsInSolution.valueOrEmpty().forEach { t ->
-                    println("Project: ${t.name}");
-                }
+        fun generate(folder: File, csprojFile: File) {
+            // Get the folder of the solution, then get the folder of the actual project
+            val userFile = File(folder, "${csprojFile.name}.user")
 
-                // Get the folder of the solution, then get the folder of the actual project
-                val folder = getProjectFolder(project)
-                val userFile = getUserCsprojFile(project)
+            if (folder.exists() && isBeatSaberProject(csprojFile)) {
+                if (userFile.exists()) {
+                    updateFileContent(userFile)
+                } else {
+                    val content = generateFileContent(getBeatSaberFolder())
 
-                if (folder.exists() && isBeatSaberProject(project)) {
-                    if (userFile.exists()) {
-                        updateFileContent(userFile)
-                    } else {
-                        val content = generateFileContent(getBeatSaberFolder())
-
-                        ApplicationManager.getApplication().invokeLaterOnWriteThread {
-                            ApplicationManager.getApplication().runWriteAction {
-                                userFile.createNewFile()
-                                VfsUtil.saveText(VfsUtil.findFileByIoFile(userFile, true)!!, content)
-                            }
+                    ApplicationManager.getApplication().invokeLaterOnWriteThread {
+                        ApplicationManager.getApplication().runWriteAction {
+                            userFile.createNewFile()
+                            VfsUtil.saveText(VfsUtil.findFileByIoFile(userFile, true)!!, content)
                         }
                     }
                 }
@@ -67,10 +93,8 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
         }
 
         // TODO: Make this more performant
-        fun isBeatSaberProject(project: Project?): Boolean {
-            if (project == null) return false;
-
-            val file = getCsprojFile(project)
+        fun isBeatSaberProject(file: File?): Boolean {
+            if (file == null) return false
 
             if (!file.exists()) return false
 
@@ -80,19 +104,6 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
             }
             
             return contents.contains("IPA.Loader")
-        }
-
-        // This code is problematic since it assumes that project name, folder and csproj name are all equal. We need a fix
-        private fun getProjectFolder(project: Project): File {
-            return File(File(project.solutionPath).parentFile, project.name)
-        }
-
-        private fun getCsprojFile(project: Project): File {
-            return File(getProjectFolder(project), "${project.name}.csproj")
-        }
-
-        private fun getUserCsprojFile(project: Project): File {
-            return File(getProjectFolder(project), "${project.name}.csproj.user")
         }
 
         // TODO: Clean this up using POJO if possible.
