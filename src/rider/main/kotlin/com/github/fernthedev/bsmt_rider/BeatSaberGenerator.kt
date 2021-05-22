@@ -255,8 +255,7 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
         }
 
         private fun getBeatSaberFolder(project: Project? = null): String? {
-            val instance = AppSettingsState.instance
-            return instance.defaultFolder ?: AppSettingsState.instance.getBeatSaberDir(project)
+            return AppSettingsState.instance.getBeatSaberDir(project)
         }
 
         private fun generateFileContent(beatSaberFolder: String): String {
