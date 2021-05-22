@@ -71,7 +71,7 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
         }
 
         fun locateFoldersAndGenerate(items: List<ProjectModelEntity>?) {
-            val folders = locateFolders(items);
+            val folders = locateFolders(items)
             val filesToRefresh: MutableList<File> = mutableListOf()
 
             folders.forEach {
@@ -86,7 +86,7 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
             }
         }
 
-        fun generate(folder: File, csprojFile: File) {
+        private fun generate(folder: File, csprojFile: File) {
             // Get the folder of the solution, then get the folder of the actual project
             val userFile = File(folder, "${csprojFile.name}.user")
 
@@ -111,6 +111,7 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
         }
 
         // TODO: Make this more performant
+        // TODO: Make this a coroutine?
         fun isBeatSaberProject(file: File?): Boolean {
             if (file == null) return false
 
@@ -118,14 +119,21 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
 
             var contents = ""
 
-            while (!ProgressManager.getInstance().runInReadActionWithWriteActionPriority({
-                    ProgressManager.checkCanceled()
+            if (ApplicationManager.getApplication().isDispatchThread) {
+                ApplicationManager.getApplication().runReadAction {
                     contents = VfsUtil.loadText(VfsUtil.findFileByIoFile(file, true)!!)
-                }, null)) {
-                // Avoid using resources
-                Thread.yield()
+                }
+            } else {
+                while (!ProgressManager.getInstance().runInReadActionWithWriteActionPriority({
+                        ProgressManager.checkCanceled()
+                        contents = VfsUtil.loadText(VfsUtil.findFileByIoFile(file, true)!!)
+                    }, null)) {
+                    // Avoid using resources
+                    Thread.yield()
+                }
             }
-            
+
+
             return contents.contains("IPA.Loader") ||
                     contents.contains("BeatSaberModdingTools.Tasks") ||
                     contents.contains("$(BeatSaberDir)")
@@ -190,7 +198,7 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
                 propertyGroupNode = propertyGroupNodePre
             }
 
-            val node = mapper.createArrayNode();
+            val node = mapper.createArrayNode()
 
             node.add(beatSaberFolder)
 

@@ -4,6 +4,8 @@ import com.github.fernthedev.bsmt_rider.BeatSaberGenerator
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.progress.runBackgroundableTask
 import com.intellij.workspaceModel.ide.WorkspaceModel
 import com.jetbrains.rider.projectView.hasSolution
@@ -37,8 +39,17 @@ class UserCSProjAction : AnAction() {
         }
 
         e.presentation.isEnabledAndVisible = project?.hasSolution == true
-        e.presentation.isEnabled = e.presentation.isVisible &&
-                findProjects != null && BeatSaberGenerator.locateFolders(findProjects)
-                    .any { BeatSaberGenerator.isBeatSaberProject(it.csprojFile) }
+
+        var enabled = e.presentation.isVisible
+
+        // Avoid locking the UI thread
+        ReadAction.nonBlocking {
+            enabled = enabled &&
+                    findProjects != null && BeatSaberGenerator.locateFolders(findProjects)
+                .any { BeatSaberGenerator.isBeatSaberProject(it.csprojFile) }
+        }.finishOnUiThread(ModalityState.NON_MODAL) {
+            e.presentation.isEnabled = enabled
+        }
+
     }
 }
