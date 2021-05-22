@@ -18,7 +18,7 @@
     <applicationService serviceImplementation="com.github.fernthedev.bsmt_rider.settings.AppSettingsState"/>
     <applicationConfigurable parentId="tools" instance="com.github.fernthedev.bsmt_rider.settings.AppSettingsConfigurable"
                              id="com.github.fernthedev.bsmt_rider.settings.AppSettingsConfigurable"
-                             displayName="BSMT Rider: Settings"/>
+                             displayName="BSMT Rider"/>
   </extensions>
 
   <project-components>
