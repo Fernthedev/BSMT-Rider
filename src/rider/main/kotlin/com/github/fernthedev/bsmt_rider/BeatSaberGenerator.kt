@@ -9,6 +9,8 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.dataformat.xml.util.DefaultXmlPrettyPrinter
 import com.github.fernthedev.bsmt_rider.settings.AppSettingsState
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.runBackgroundableTask
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.workspaceModel.ide.WorkspaceModel
@@ -30,7 +32,9 @@ data class BeatSaberFolders(
 class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(project) {
     init {
         project.solution.isLoaded.whenTrue(projectComponentLifetime) {
-            locateFolders(WorkspaceModel.getInstance(project).findProjects())
+            runBackgroundableTask("Create user.csproj", project) {
+                locateFoldersAndGenerate(WorkspaceModel.getInstance(project).findProjects())
+            }
         }
     }
 
@@ -67,8 +71,18 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
         }
 
         fun locateFoldersAndGenerate(items: List<ProjectModelEntity>?) {
-            locateFolders(items).forEach {
+            val folders = locateFolders(items);
+            val filesToRefresh: MutableList<File> = mutableListOf()
+
+            folders.forEach {
                 generate(it.projectFolder, it.csprojFile)
+                filesToRefresh.add(it.projectFolder)
+                filesToRefresh.add(it.csprojFile)
+            }
+
+            if (filesToRefresh.isNotEmpty()) {
+                // TODO: Find a way to reload solution
+                VfsUtil.markDirtyAndRefresh(true, false, false, *filesToRefresh.toTypedArray())
             }
         }
 
@@ -103,8 +117,13 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
             if (!file.exists()) return false
 
             var contents = ""
-            ApplicationManager.getApplication().runReadAction {
-                contents = VfsUtil.loadText(VfsUtil.findFileByIoFile(file, true)!!)
+
+            while (!ProgressManager.getInstance().runInReadActionWithWriteActionPriority({
+                    ProgressManager.checkCanceled()
+                    contents = VfsUtil.loadText(VfsUtil.findFileByIoFile(file, true)!!)
+                }, null)) {
+                // Avoid using resources
+                Thread.yield()
             }
             
             return contents.contains("IPA.Loader") ||
@@ -120,8 +139,12 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
             val file = VfsUtil.findFileByIoFile(userCsprojFile, true)!!
 
             var contents = ""
-            ApplicationManager.getApplication().runReadAction {
-                contents = VfsUtil.loadText(file)
+            while (!ProgressManager.getInstance().runInReadActionWithWriteActionPriority({
+                    ProgressManager.checkCanceled()
+                    contents = VfsUtil.loadText(file)
+                }, null)) {
+                // Avoid using resources
+                Thread.yield()
             }
 
             // Skip if user.csproj already contains reference
