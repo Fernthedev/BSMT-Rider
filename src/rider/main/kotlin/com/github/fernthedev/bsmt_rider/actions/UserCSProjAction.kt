@@ -23,7 +23,7 @@ class UserCSProjAction : AnAction() {
 
         if (project != null && e.presentation.isEnabledAndVisible && findProjects != null) {
             runBackgroundableTask("Create user.csproj", project) {
-                BeatSaberGenerator.locateFoldersAndGenerate(WorkspaceModel.getInstance(project).findProjects())
+                BeatSaberGenerator.locateFoldersAndGenerate(WorkspaceModel.getInstance(project).findProjects() ,project)
             }
         }
     }

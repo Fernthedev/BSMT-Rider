@@ -15,6 +15,7 @@ Rider 2021.1
 - Auto-generate `project.csproj.user` file with Beat Saber directory
 - Settings page (Settings -> Tools -> BSMT Rider) with user-defined beat saber folders for selection, including default beat saber directory
 - Ask user to select beat saber folder when opening a Beat Saber project. Does not appear if a default beat saber folder is selected.
+- Reload solution after generating `csproj.user`
 
 ## TODO:
 - MelonLoader (?)
@@ -22,5 +23,4 @@ Rider 2021.1
     - MelonLoader specific csproj if needed?
 - Add Beat Saber reference generator
 - Automatically fill Beat Saber folders by locating Beat Saber directories when empty.
-- Reload solution after generating `csproj.user`
 - ~~Leave BSMT for VS 2019 in the dust~~

@@ -14,26 +14,31 @@ import com.intellij.openapi.progress.runBackgroundableTask
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.workspaceModel.ide.WorkspaceModel
+import com.jetbrains.rd.platform.util.application
 import com.jetbrains.rd.platform.util.idea.ProtocolSubscribedProjectComponent
 import com.jetbrains.rd.util.reactive.whenTrue
-import com.jetbrains.rider.model.RdCustomLocation
-import com.jetbrains.rider.model.RdProjectDescriptor
+import com.jetbrains.rider.model.*
+import com.jetbrains.rider.projectView.ProjectModelViewUpdater
+import com.jetbrains.rider.projectView.ProjectModelViewUpdaterAsync
 import com.jetbrains.rider.projectView.solution
 import com.jetbrains.rider.projectView.workspace.ProjectModelEntity
 import com.jetbrains.rider.projectView.workspace.findProjects
+import com.jetbrains.rider.projectView.workspace.getId
+import com.jetbrains.rider.util.idea.runUnderProgress
 import java.io.File
 
 
 data class BeatSaberFolders(
     val csprojFile: File,
     val projectFolder: File,
+    val project: ProjectModelEntity
 )
 
 class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(project) {
     init {
         project.solution.isLoaded.whenTrue(projectComponentLifetime) {
             runBackgroundableTask("Create user.csproj", project) {
-                locateFoldersAndGenerate(WorkspaceModel.getInstance(project).findProjects())
+                locateFoldersAndGenerate(WorkspaceModel.getInstance(project).findProjects(), project)
             }
         }
     }
@@ -63,14 +68,15 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
 
                     val projFolder = File(projectRdData.baseDirectory ?: csprojFile.parent)
 
-                    folders.add(BeatSaberFolders(csprojFile, projFolder))
+                    folders.add(BeatSaberFolders(csprojFile, projFolder, projectData))
                 }
             }
 
             return folders
         }
 
-        fun locateFoldersAndGenerate(items: List<ProjectModelEntity>?) {
+
+        fun locateFoldersAndGenerate(items: List<ProjectModelEntity>?, project: Project?) {
             val folders = locateFolders(items)
             val filesToRefresh: MutableList<File> = mutableListOf()
 
@@ -80,9 +86,53 @@ class BeatSaberGenerator(project: Project) : ProtocolSubscribedProjectComponent(
                 filesToRefresh.add(it.csprojFile)
             }
 
-            if (filesToRefresh.isNotEmpty()) {
-                // TODO: Find a way to reload solution
-                VfsUtil.markDirtyAndRefresh(true, false, false, *filesToRefresh.toTypedArray())
+            if (filesToRefresh.isNotEmpty() && project != null) {
+
+                // TODO: Make this only run if a `csproj.user` file has been created or modified, not all the time
+                // We do this to force ordering
+                // In other words, force it to refresh AFTER writing is done
+                // I'm not proud of this ugly code nesting at all nor hard coding this
+                ApplicationManager.getApplication().invokeLaterOnWriteThread {
+                    ApplicationManager.getApplication().runWriteAction {
+                        ApplicationManager.getApplication().invokeLater {
+
+                            ProjectModelViewUpdater.fireUpdate(project) {
+                                it.updateAll()
+                            }
+                            ProjectModelViewUpdaterAsync.getInstance(project).requestUpdatePresentation()
+
+                            /// We have to hard code UnloadProjectAction.execute it seems unfortunately
+                            /// This is ugly, maybe find a way to get a component that references the
+                            // csproj directly so we can use DataContexts?
+                            val projects = folders.mapNotNull { it.project.getId(project) }
+
+                            application.saveAll()
+                            val command =
+                                UnloadCommand(projects.toList())
+
+                            project.solution.projectModelTasks.unloadProjects.runUnderProgress(
+                                command,
+                                project,
+                                "Unload ${projects.size} projects...",
+                                isCancelable = false,
+                                throwFault = false
+                            )
+
+                            // We do the same here sadly
+                            val command2 =
+                                ReloadCommand(projects.toList())
+
+                            project.solution.projectModelTasks.reloadProjects.runUnderProgress(
+                                command2,
+                                project,
+                                "Reload ${projects.size} projects...",
+                                isCancelable = false,
+                                throwFault = false,
+                            )
+                        }
+                        VfsUtil.markDirtyAndRefresh(true, false, false, *filesToRefresh.toTypedArray())
+                    }
+                }
             }
         }
 
