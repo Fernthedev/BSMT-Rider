@@ -8,7 +8,6 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.project.Project
 import com.intellij.util.xmlb.XmlSerializerUtil
-import java.util.concurrent.atomic.AtomicBoolean
 
 
 /**
@@ -41,25 +40,12 @@ class AppSettingsState : PersistentStateComponent<AppSettingsState> {
             return null
         }
 
-        // If on UI thread, make dialogue
-        if (ApplicationManager.getApplication().isDispatchThread)
-            return task()
-        // if not on ui thread, make dialogue in UI thread and wait
-        else {
-            var result: String? = null
-            val called = AtomicBoolean(false)
-            ApplicationManager.getApplication().invokeLater {
-                result = task()
-                called.set(true)
-            }
-
-            // Just yield since this will take a while
-            // We want to avoid hoarding resources
-            while (!called.get())
-                Thread.yield()
-
-            return result
+        var result: String? = null
+        ApplicationManager.getApplication().invokeAndWait {
+            result = task()
         }
+
+        return result
     }
 
     override fun getState(): AppSettingsState {
