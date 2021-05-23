@@ -27,6 +27,7 @@ namespace ReSharperPlugin.BSMT_Rider
                 return content;
             }
 
+            // TODO: Get configured paths
             var possiblePaths = BeatSaberPathUtils.GetInstallDir();
             var options = new List<RdProjectTemplateGroupOption>();
 

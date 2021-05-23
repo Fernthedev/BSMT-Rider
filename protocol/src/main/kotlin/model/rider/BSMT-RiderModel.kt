@@ -1,32 +1,31 @@
 package model.rider
 
-import com.jetbrains.rider.model.nova.ide.SolutionModel
 import com.jetbrains.rd.generator.nova.*
-import com.jetbrains.rd.generator.nova.PredefinedType.*
+import com.jetbrains.rd.generator.nova.PredefinedType.bool
+import com.jetbrains.rd.generator.nova.PredefinedType.string
+import com.jetbrains.rd.generator.nova.csharp.CSharp50Generator
+import com.jetbrains.rider.model.nova.ide.SolutionModel
+
+// https://github.com/JetBrains/resharper-unity/blob/9058c328202ac1a28e40a6bf29dd064c872934ee/rider/protocol/src/main/kotlin/model/backendUnity/BackendUnityModel.kt#L8-L14
 
 @Suppress("unused")
+// TODO: Find a way to make this not an extension and instead a singleton
 object BSMT_RiderModel : Ext(SolutionModel.Solution) {
 
-    val MyEnum = enum {
-        +"FirstValue"
-        +"SecondValue"
-    }
+    val ConfigSettings = structdef {
+        field("isDefaultBeatSaberLocation", bool)
+        field("defaultBeatSaberLocation", string.nullable)
 
-    val MyStructure = structdef {
-        field("projectFile", string)
-        field("target", string)
+        field("ConfiguredBeatSaberLocations", array(string))
     }
 
     init {
-        //setting(CSharp50Generator.Namespace, "ReSharperPlugin.BSMT_Rider.Rider.Model")
-        //setting(Kotlin11Generator.Namespace, "com.jetbrains.rider.bsmt_rider.model")
+        setting(CSharp50Generator.Namespace, "ReSharperPlugin.BSMT_Rider.Rider.Model")
+//        setting(Kotlin11Generator.Namespace, "com.jetbrains.rider.bsmt_rider.model")
 
-        property("myString", string)
-        property("myBool", bool)
-        property("myEnum", MyEnum.nullable)
+        callback("GetUserSettings", PredefinedType.void.nullable, ConfigSettings)
+        call("FoundBeatSaberLocations", PredefinedType.void.nullable , array(string))
 
-        map("data", string, string)
-
-        signal("myStructure", MyStructure)
+//        signal("myStructure", MyStructure)
     }
 }

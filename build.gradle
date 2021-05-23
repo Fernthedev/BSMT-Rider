@@ -132,8 +132,8 @@ apply plugin: 'com.jetbrains.rdgen'
 
 rdgen {
     def modelDir = new File(rootDir, "protocol/src/main/kotlin/model")
-    def csOutput = new File(rootDir, "src/dotnet/${DotnetPluginId}/Rider")
-    def ktOutput = new File(rootDir, "src/rider/main/kotlin/com/jetbrains/rider/plugins/${RiderPluginId.replace('.','/').toLowerCase()}")
+    def csOutput = new File(rootDir, "src/dotnet/${DotnetPluginId}/Rider/model")
+    def ktOutput = new File(rootDir, "src/rider/main/kotlin/com/github/fernthedev/${RiderPluginId.replace('.','/').toLowerCase()}/model")
 
     verbose = true
     classpath {

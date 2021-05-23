@@ -23,7 +23,7 @@
 
   <project-components>
     <component>
-      <implementation-class>com.github.fernthedev.bsmt_rider.BeatSaberGenerator</implementation-class>
+      <implementation-class>com.github.fernthedev.bsmt_rider.ProjectProtocolHandler</implementation-class>
     </component>
   </project-components>
 

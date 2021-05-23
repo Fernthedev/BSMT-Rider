@@ -12,6 +12,7 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBTextField
 import com.intellij.util.ui.FormBuilder
+import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.ListModel
@@ -43,6 +44,7 @@ class AppSettingsComponent {
 
     private val _useDefaultFolder = JBCheckBox("Use a default beat saber directory?")
     private var _defaultFolder = JBTextField()
+    private val _getBeatSaberDirs = JButton("Locate Beat Saber Directories")
 
     val preferredFocusedComponent: JComponent
         get() = _beatSaberFolders
@@ -111,6 +113,7 @@ class AppSettingsComponent {
 
         _defaultFolder.isEditable = false
 
+        _getBeatSaberDirs.isEnabled = false // TODO: Find a way to get beat saber dirs without a solution
 
 
         panel = FormBuilder.createFormBuilder()
