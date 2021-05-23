@@ -1,7 +1,10 @@
 package com.github.fernthedev.bsmt_rider.settings
 
+import com.github.fernthedev.bsmt_rider.RiderProtocolHandler
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ConfigurationException
+import com.jetbrains.rd.util.lifetime.Lifetime
+import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import org.jetbrains.annotations.Nls
 import javax.swing.JComponent
 
@@ -10,6 +13,7 @@ import javax.swing.JComponent
  * Provides controller functionality for application settings.
  */
 class AppSettingsConfigurable : Configurable {
+    private var lifetime: Lifetime? = LifetimeDefinition()
     private var mySettingsComponent: AppSettingsComponent? = null
 
     // A default constructor with no arguments is required because this implementation
@@ -32,7 +36,7 @@ class AppSettingsConfigurable : Configurable {
 
 
         var modified: Boolean = mySettingsComponent!!.beatSaberFolders.any { !settings.beatSaberFolders.contains(it) }
-        modified = modified or (mySettingsComponent!!.useDefaultFolder != settings!!.useDefaultFolder)
+        modified = modified or (mySettingsComponent!!.useDefaultFolder != settings.useDefaultFolder)
         modified = modified or (mySettingsComponent!!.defaultBeatSaberFolder != settings.defaultFolder)
         return modified
     }
@@ -41,13 +45,15 @@ class AppSettingsConfigurable : Configurable {
         val settings: AppSettingsState = AppSettingsState.instance
         // TODO: Should this even be null?
         if (mySettingsComponent != null) {
-            settings.beatSaberFolders = mySettingsComponent!!.beatSaberFolders
-            settings.useDefaultFolder = mySettingsComponent!!.useDefaultFolder
+            val component = mySettingsComponent!!
 
-            if (settings.useDefaultFolder && mySettingsComponent!!.defaultBeatSaberFolder == null)
+            settings.beatSaberFolders = component.beatSaberFolders
+            settings.useDefaultFolder = component.useDefaultFolder
+
+            if (settings.useDefaultFolder && component.defaultBeatSaberFolder == null)
                 throw ConfigurationException("You must specify the default beat saber folder")
 
-            settings.defaultFolder = mySettingsComponent!!.defaultBeatSaberFolder
+            settings.defaultFolder = component.defaultBeatSaberFolder
         }
     }
 
@@ -55,12 +61,33 @@ class AppSettingsConfigurable : Configurable {
         val settings: AppSettingsState = AppSettingsState.instance
         /// TODO: Find beat saber folders from C# backend
 
-        mySettingsComponent!!.beatSaberFolders = settings.beatSaberFolders
-        mySettingsComponent!!.useDefaultFolder = settings.useDefaultFolder
-        mySettingsComponent!!.defaultBeatSaberFolder = settings.defaultFolder
+        val component = mySettingsComponent!!
+
+        component.beatSaberFolders = settings.beatSaberFolders
+        component.useDefaultFolder = settings.useDefaultFolder
+        component.defaultBeatSaberFolder = settings.defaultFolder
+
+
+        // TODO: Find a way to make request to Resharper even though it only runs on project load
+        if (false && component.beatSaberFolders.isEmpty() && settings.beatSaberFolders.isEmpty()) {
+
+            RiderProtocolHandler.instance.bsmtRidermodel.foundBeatSaberLocations.start(lifetime!!, null)
+                .result.advise(lifetime!!) {
+                    if (settings.beatSaberFolders.isEmpty()) {
+                        settings.beatSaberFolders = it.unwrap()
+                    }
+                    component.beatSaberFolders = settings.beatSaberFolders
+                }
+
+
+        }
     }
 
     override fun disposeUIResources() {
         mySettingsComponent = null
+        if (lifetime is LifetimeDefinition) {
+            (lifetime as LifetimeDefinition).terminate()
+        }
+        lifetime = null
     }
 }

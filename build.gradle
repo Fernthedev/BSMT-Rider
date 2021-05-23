@@ -146,7 +146,7 @@ rdgen {
     generator {
         language = "kotlin"
         transform = "asis"
-        root = "com.jetbrains.rider.model.nova.ide.IdeRoot"
+        root = "model.rider.BSMT_RiderModel"
         namespace = "com.jetbrains.rider.model"
         directory = "$ktOutput"
     }
@@ -154,7 +154,7 @@ rdgen {
     generator {
         language = "csharp"
         transform = "reversed"
-        root = "com.jetbrains.rider.model.nova.ide.IdeRoot"
+        root = "model.rider.BSMT_RiderModel"
         namespace = "JetBrains.Rider.Model"
         directory = "$csOutput"
     }

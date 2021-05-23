@@ -36,7 +36,7 @@ namespace ReSharperPlugin.BSMT_Rider.Rider.Model
   
   
   /// <summary>
-  /// <p>Generated from: BSMT-RiderModel.kt:13</p>
+  /// <p>Generated from: BSMT-RiderModel.kt:12</p>
   /// </summary>
   public class BSMT_RiderModel : RdExtBase
   {
@@ -66,7 +66,7 @@ namespace ReSharperPlugin.BSMT_Rider.Rider.Model
       BindableChildren.Add(new KeyValuePair<string, object>("foundBeatSaberLocations", _FoundBeatSaberLocations));
     }
     //secondary constructor
-    internal BSMT_RiderModel (
+    private BSMT_RiderModel (
     ) : this (
       new RdCall<Unit, ConfigSettings>(ReadVoidNullable, WriteVoidNullable, ConfigSettings.Read, ConfigSettings.Write),
       new RdCall<Unit, string[]>(ReadVoidNullable, WriteVoidNullable, ReadStringArray, WriteStringArray)
@@ -80,15 +80,20 @@ namespace ReSharperPlugin.BSMT_Rider.Rider.Model
     public static  CtxWriteDelegate<Unit> WriteVoidNullable = JetBrains.Rd.Impl.Serializers.WriteVoid.NullableClass();
     public static  CtxWriteDelegate<string[]> WriteStringArray = JetBrains.Rd.Impl.Serializers.WriteString.Array();
     
-    protected override long SerializationHash => 3903957844728161205L;
+    protected override long SerializationHash => -5354681891147381364L;
     
     protected override Action<ISerializers> Register => RegisterDeclaredTypesSerializers;
     public static void RegisterDeclaredTypesSerializers(ISerializers serializers)
     {
       
-      serializers.RegisterToplevelOnce(typeof(JetBrains.Rider.Model.IdeRoot), JetBrains.Rider.Model.IdeRoot.RegisterDeclaredTypesSerializers);
+      serializers.RegisterToplevelOnce(typeof(BSMT_RiderModel), BSMT_RiderModel.RegisterDeclaredTypesSerializers);
     }
     
+    public BSMT_RiderModel(Lifetime lifetime, IProtocol protocol) : this()
+    {
+      Identify(protocol.Identities, RdId.Root.Mix("BSMT_RiderModel"));
+      Bind(lifetime, protocol, "BSMT_RiderModel");
+    }
     
     //constants
     
@@ -114,17 +119,10 @@ namespace ReSharperPlugin.BSMT_Rider.Rider.Model
       return printer.ToString();
     }
   }
-  public static class SolutionBSMT_RiderModelEx
-   {
-    public static BSMT_RiderModel GetBSMT_RiderModel(this JetBrains.Rider.Model.Solution solution)
-    {
-      return solution.GetOrCreateExtension("bSMT_RiderModel", () => new BSMT_RiderModel());
-    }
-  }
   
   
   /// <summary>
-  /// <p>Generated from: BSMT-RiderModel.kt:15</p>
+  /// <p>Generated from: BSMT-RiderModel.kt:14</p>
   /// </summary>
   public sealed class ConfigSettings : IPrintable, IEquatable<ConfigSettings>
   {

@@ -3,8 +3,10 @@ using System.Linq;
 using JetBrains.Application;
 using JetBrains.ReSharper.Host.Features.ProjectModel.ProjectTemplates.DotNetExtensions;
 using JetBrains.ReSharper.Host.Features.ProjectModel.ProjectTemplates.DotNetTemplates;
+using JetBrains.ReSharper.Resources.Shell;
 using JetBrains.Rider.Model;
 using JetBrains.Util;
+using ReSharperPlugin.BSMT_Rider.Rider.Model;
 
 // TODO: Somehow validate if custom path folder is a Beat Saber folder
 namespace ReSharperPlugin.BSMT_Rider
@@ -27,8 +29,8 @@ namespace ReSharperPlugin.BSMT_Rider
                 return content;
             }
 
-            // TODO: Get configured paths
-            var possiblePaths = BeatSaberPathUtils.GetInstallDir();
+
+            var possiblePaths = BeatSaberPathUtils.GetInstallDir(); // Shell.Instance.GetComponent<ProjectProtocolHandler>().BsmtRiderModel.GetUserSettings.Sync(null).ConfiguredBeatSaberLocations;
             var options = new List<RdProjectTemplateGroupOption>();
 
             foreach (var path in possiblePaths)

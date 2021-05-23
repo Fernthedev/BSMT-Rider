@@ -1,5 +1,5 @@
 @file:Suppress("EXPERIMENTAL_API_USAGE","EXPERIMENTAL_UNSIGNED_LITERALS","PackageDirectoryMismatch","UnusedImport","unused","LocalVariableName","CanBeVal","PropertyName","EnumEntryName","ClassName","ObjectPropertyName","UnnecessaryVariable","SpellCheckingInspection")
-package com.jetbrains.rd.ide.model
+package com.jetbrains.rider.model
 
 import com.jetbrains.rd.framework.*
 import com.jetbrains.rd.framework.base.*
@@ -14,7 +14,7 @@ import kotlin.reflect.KClass
 
 
 /**
- * #### Generated from [BSMT-RiderModel.kt:13]
+ * #### Generated from [BSMT-RiderModel.kt:12]
  */
 class BSMT_RiderModel private constructor(
     private val _getUserSettings: RdCall<Unit?, ConfigSettings>,
@@ -26,14 +26,23 @@ class BSMT_RiderModel private constructor(
         
         override fun registerSerializersCore(serializers: ISerializers)  {
             serializers.register(ConfigSettings)
+            BSMT_RiderModel.register(serializers)
         }
         
         
+        fun create(lifetime: Lifetime, protocol: IProtocol): BSMT_RiderModel  {
+            BSMT_RiderModel.register(protocol.serializers)
+            
+            return BSMT_RiderModel().apply {
+                identify(protocol.identity, RdId.Null.mix("BSMT_RiderModel"))
+                bind(lifetime, protocol, "BSMT_RiderModel")
+            }
+        }
         
         private val __VoidNullableSerializer = FrameworkMarshallers.Void.nullable()
         private val __StringArraySerializer = FrameworkMarshallers.String.array()
         
-        const val serializationHash = 3903957844728161205L
+        const val serializationHash = -5354681891147381364L
         
     }
     override val serializersOwner: ISerializersOwner get() = BSMT_RiderModel
@@ -50,7 +59,7 @@ class BSMT_RiderModel private constructor(
     }
     
     //secondary constructor
-    internal constructor(
+    private constructor(
     ) : this(
         RdCall<Unit?, ConfigSettings>(__VoidNullableSerializer, ConfigSettings),
         RdCall<Unit?, Array<String>>(__VoidNullableSerializer, __StringArraySerializer)
@@ -76,12 +85,10 @@ class BSMT_RiderModel private constructor(
     }
     //contexts
 }
-val Solution.bSMT_RiderModel get() = getOrCreateExtension("bSMT_RiderModel", ::BSMT_RiderModel)
-
 
 
 /**
- * #### Generated from [BSMT-RiderModel.kt:15]
+ * #### Generated from [BSMT-RiderModel.kt:14]
  */
 data class ConfigSettings (
     val isDefaultBeatSaberLocation: Boolean,
