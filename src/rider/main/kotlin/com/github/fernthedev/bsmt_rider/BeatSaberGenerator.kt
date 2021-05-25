@@ -193,9 +193,10 @@ object BeatSaberGenerator {
         }
 
         // Skip if user.csproj already contains reference
-        if (contents.trimIndent().contains(
+        // Replace \ to / allows for paths to be resolved universally
+        if (contents.trimIndent().replace("\\","/").contains(
                 """
-                    <BeatSaberDir>$beatSaberFolder</BeatSaberDir>
+                    <BeatSaberDir>${beatSaberFolder.replace("\\","/")}</BeatSaberDir>
                     """.trimIndent(),
                 ignoreCase = true
             )
@@ -204,7 +205,7 @@ object BeatSaberGenerator {
         }
 
 
-        val startIndex = contents.indexOf("<Project>")
+        val startIndex = contents.indexOf("<Project")
         val endString = "</Project>"
         val endIndex = contents.indexOf(endString) + endString.length
 
