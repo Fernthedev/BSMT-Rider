@@ -19,16 +19,13 @@ import com.jetbrains.rider.projectView.workspace.getId
 import com.jetbrains.rider.util.idea.runUnderProgress
 import java.io.File
 
-
-
 object ProjectUtils {
-
     // with Jackson 2.10 and later
     val xmlParser: XmlMapper =
         XmlMapper.builder(XmlFactory(WstxInputFactory(), WstxOutputFactory())) // possible configuration changes
             .defaultPrettyPrinter(DefaultXmlPrettyPrinter())
             .build()
-//            .registerModule(KotlinModule())
+
 
     fun refreshProjectWithFiles(folders: List<BeatSaberFolders>, filesToRefresh: List<File>, project: Project?) {
         if (filesToRefresh.isNotEmpty() && project != null) {

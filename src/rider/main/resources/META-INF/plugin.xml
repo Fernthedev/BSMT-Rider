@@ -28,20 +28,29 @@
     </component>
   </project-components>
 
+
   <actions>
+    <group  id="BSMTRider.projectTools" text="BSMT Rider Project Tools" popup="true">
+        <add-to-group group-id="ToolsMenu" anchor="last"/>
+        <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+    </group>
     <action
             id="BSMTRider.generateUserCsProj"
             class="com.github.fernthedev.bsmt_rider.actions.UserCSProjAction"
             text="Generate Project user.csproj"
             description="Generate a user.csproj">
-      <add-to-group group-id="ToolsMenu" anchor="last"/>
+      <add-to-group group-id="BSMTRider.projectTools" anchor="first" />
+<!--      <add-to-group group-id="ToolsMenu" anchor="last"/>-->
+<!--      <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>-->
     </action>
     <action
             id="BSMTRider.addBeatSaberReferenceToolsMenu"
             class="com.github.fernthedev.bsmt_rider.actions.BeatSaberReferenceGeneratorAction"
             text="Add Beat Saber assembly references"
             description="Add Beat Saber reference">
-      <add-to-group group-id="ToolsMenu" anchor="last"/>
+      <add-to-group group-id="BSMTRider.projectTools" anchor="after" relative-to-action="BSMTRider.generateUserCsProj" />
+<!--      <add-to-group group-id="ToolsMenu" anchor="last"/>-->
+<!--      <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>-->
     </action>
   </actions>
 

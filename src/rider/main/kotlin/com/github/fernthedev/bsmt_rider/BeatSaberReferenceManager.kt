@@ -1,10 +1,6 @@
 package com.github.fernthedev.bsmt_rider
 
-import com.fasterxml.jackson.databind.exc.ValueInstantiationException
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.fasterxml.jackson.module.kotlin.treeToValue
 import com.github.fernthedev.bsmt_rider.dialogue.BeatSaberReferencesDialogue
 import com.github.fernthedev.bsmt_rider.settings.getBeatSaberSelectedDir
 import com.github.fernthedev.bsmt_rider.xml.ReferenceXML
@@ -31,33 +27,6 @@ import kotlin.io.path.nameWithoutExtension
 
 object BeatSaberReferenceManager {
 
-
-    private fun getReferences(propertyGroupNodes: ArrayNode): List<ReferenceXML> {
-        val refs = ArrayList<ReferenceXML>()
-
-        if (propertyGroupNodes.isEmpty)
-            return emptyList()
-
-        propertyGroupNodes.forEach { propertyGroup ->
-            propertyGroup.forEach {
-                it.forEach { propGroup ->
-                    try {
-                        val ref = ProjectUtils.xmlParser.treeToValue<ReferenceXML>(propGroup)
-
-
-                        if (ref != null) {
-                            refs.add(ref)
-                        }
-                    } catch (e: ValueInstantiationException) {
-                        // todo, log error as warning?
-                    }
-                }
-            }
-        }
-
-        return refs
-    }
-
     private fun getReferences(itemGroup: XmlTag): List<ReferenceXML> {
         val refs = ArrayList<ReferenceXML>()
 
@@ -80,78 +49,32 @@ object BeatSaberReferenceManager {
     private fun writeReferences(
         csprojFile: VirtualFile,
         itemGroup: XmlTag,
-        psiFile: XmlFile,
         refsToAdd: List<ReferenceXML>,
         project: Project,
         projectData: ProjectModelEntity
     ) {
-//        ApplicationManager.getApplication().invokeLaterOnWriteThread {
-//            ApplicationManager.getApplication().runWriteAction {
-                try {
-                    WriteCommandAction.runWriteCommandAction(project) {
-                        require(itemGroup.isWritable) { "Cannot write to tag!" }
-                        require(itemGroup.containingFile.isWritable) { "Cannot write to file!" }
+
+        try {
+            WriteCommandAction.runWriteCommandAction(project) {
+                require(itemGroup.isWritable) { "Cannot write to tag!" }
+                require(itemGroup.containingFile.isWritable) { "Cannot write to file!" }
 
 
-                        refsToAdd.forEach { ref ->
-                            val tag = itemGroup.createChildTag("Reference", "", ref.toXMLNoRoot().replace("\r\n","\n"), false);
+                refsToAdd.forEach { ref ->
+                    val tag = itemGroup.createChildTag("Reference", "", ref.toXMLNoRoot().replace("\r\n", "\n"), false);
 
-                            // Path(PathUtil.getFileName(ref.stringHintPath))
+                    val includeName = Path(ref.stringHintPath).nameWithoutExtension
 
-                            val includeName = Path(ref.stringHintPath).nameWithoutExtension
-
-                            tag.setAttribute("Include", includeName.replace("\r\n","\n"))
-                            itemGroup.addSubTag(tag, false)
-                        }
-                    }
-
-                    invokeLater {
-                        ProjectUtils.refreshProjectManually(project, listOf(projectData), listOf(csprojFile.toIOFile()))
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                    tag.setAttribute("Include", includeName.replace("\r\n", "\n"))
+                    itemGroup.addSubTag(tag, false)
                 }
-//            }
-//        }
+            }
 
-
-    }
-
-    private fun writeReferences(
-        csprojFile: VirtualFile,
-        xmlData: ObjectNode,
-        propertyGroupNodesList: ArrayNode,
-        refsToAdd: List<ReferenceXML>,
-        project: Project,
-        projectData: ProjectModelEntity
-    ) {
-        val propertyGroupNodes: ObjectNode = if (propertyGroupNodesList.isEmpty) {
-            propertyGroupNodesList.addObject()
-        } else {
-            propertyGroupNodesList.first() as ObjectNode
-        }
-
-        val propertyGroupNode: ArrayNode = if (propertyGroupNodes.isEmpty) {
-            propertyGroupNodes.arrayNode()
-        } else {
-            propertyGroupNodes.first() as ArrayNode
-        }
-
-        refsToAdd.forEach { ref ->
-            propertyGroupNode.addPOJO(ref)
-        }
-
-        val writer = ProjectUtils.xmlParser.writer().withDefaultPrettyPrinter().withRootName("Project")
-            .withAttribute("SDK", "Microsoft.NET.Sdk")
-
-        // Merge xml
-        val contents = writer.writeValueAsString(xmlData)
-
-        ApplicationManager.getApplication().invokeLaterOnWriteThread {
-            ApplicationManager.getApplication().runWriteAction {
-                VfsUtil.saveText(csprojFile, contents)
+            invokeLater {
                 ProjectUtils.refreshProjectManually(project, listOf(projectData), listOf(csprojFile.toIOFile()))
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -171,29 +94,8 @@ object BeatSaberReferenceManager {
                 itemGroup = csprojFileXML.document?.rootTag?.findFirstSubTag("ItemGroup")!!
                 refs = getReferences(itemGroup)
             }, null)) {
-            // Avoid using resources
             Thread.yield()
         }
-
-        //
-//        val xmlPreData = ProjectUtils.xmlParser.readTree(contents)
-//
-//        val xmlData: ObjectNode = if (xmlPreData is ObjectNode) {
-//            xmlPreData
-//        } else {
-//            ProjectUtils.xmlParser.createObjectNode()
-//        }
-//
-//        // Modify
-//        val propertyGroupNodePre: JsonNode? = xmlData["ItemGroup"]
-//        val propertyGroupNodes: ArrayNode
-//        if (propertyGroupNodePre == null || propertyGroupNodePre.isNull || propertyGroupNodePre !is ArrayNode) {
-//            propertyGroupNodes = ProjectUtils.xmlParser.createArrayNode()
-//            xmlData.set<ObjectNode>("PropertyGroup", propertyGroupNodes)
-//        } else {
-//            propertyGroupNodes = propertyGroupNodePre
-//        }
-
 
         val path =
             project.getBeatSaberSelectedDir() ?: return // TODO: Make this get the beat saber dir from csproj.user?
@@ -210,7 +112,6 @@ object BeatSaberReferenceManager {
             }
         }
 
-
         if (refsFromDialogue.isNotEmpty()) {
             val pathWithOSSeparator = path.replace('/', File.separatorChar)
             val xmlRefsFromDialogue = refsFromDialogue.map {
@@ -220,8 +121,7 @@ object BeatSaberReferenceManager {
                 ReferenceXML(hintPath, private)
             }
 
-            writeReferences(csprojFile, itemGroup, csprojFileXML, xmlRefsFromDialogue, project, projectData)
-//            writeReferences(csprojFile, xmlData, propertyGroupNodes, xmlRefsFromDialogue, project, projectData)
+            writeReferences(csprojFile, itemGroup, xmlRefsFromDialogue, project, projectData)
         }
     }
 }
