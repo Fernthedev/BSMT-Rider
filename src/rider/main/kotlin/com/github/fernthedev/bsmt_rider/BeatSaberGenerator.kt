@@ -1,25 +1,13 @@
 package com.github.fernthedev.bsmt_rider
 
-import com.ctc.wstx.stax.WstxInputFactory
-import com.ctc.wstx.stax.WstxOutputFactory
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.dataformat.xml.XmlFactory
-import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import com.fasterxml.jackson.dataformat.xml.util.DefaultXmlPrettyPrinter
 import com.github.fernthedev.bsmt_rider.settings.AppSettingsState
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
-import com.jetbrains.rd.platform.util.application
-import com.jetbrains.rider.model.*
-import com.jetbrains.rider.projectView.ProjectModelViewUpdater
-import com.jetbrains.rider.projectView.ProjectModelViewUpdaterAsync
-import com.jetbrains.rider.projectView.solution
 import com.jetbrains.rider.projectView.workspace.ProjectModelEntity
-import com.jetbrains.rider.projectView.workspace.getId
-import com.jetbrains.rider.util.idea.runUnderProgress
 import java.io.File
 
 
@@ -30,106 +18,42 @@ data class BeatSaberFolders(
 )
 
 object BeatSaberGenerator {
-    // with Jackson 2.10 and later
-    private val mapper =
-        XmlMapper.builder(XmlFactory(WstxInputFactory(), WstxOutputFactory())) // possible configuration changes
-            .defaultPrettyPrinter(DefaultXmlPrettyPrinter())
-            .build()
+    private val selectedBeatSaberFolder = HashMap<Project, String?>()
 
-    fun locateFolders(items: List<ProjectModelEntity>?): List<BeatSaberFolders> {
-        if (items == null)
-            return emptyList()
-
-        val folders = mutableListOf<BeatSaberFolders>()
-        items.forEach { projectData ->
-            println("Project: ${projectData.descriptor.name}")
-
-
-            val location = projectData.descriptor.location
-
-            if (location is RdCustomLocation && location.customLocation.endsWith(".csproj")
-                && projectData.descriptor is RdProjectDescriptor
-            ) {
-                val projectRdData: RdProjectDescriptor = projectData.descriptor as RdProjectDescriptor
-                val csprojFile = File(location.customLocation)
-
-                val projFolder = File(projectRdData.baseDirectory ?: csprojFile.parent)
-
-                folders.add(BeatSaberFolders(csprojFile, projFolder, projectData))
-            }
-        }
-
-        return folders
+    fun getSelectedBeatSaberFolder(project: Project): String? {
+        return selectedBeatSaberFolder.getOrDefault(project, null)
     }
+
+
 
 
     fun locateFoldersAndGenerate(items: List<ProjectModelEntity>?, project: Project?) {
-        val folders = locateFolders(items)
+        val folders = BeatSaberUtils.locateBeatSaberProjects(items)
         val filesToRefresh: MutableList<File> = mutableListOf()
 
-        folders.forEach {
-            generate(it.projectFolder, it.csprojFile)
-            filesToRefresh.add(it.projectFolder)
-            filesToRefresh.add(it.csprojFile)
+        val beatSaberFolder = getBeatSaberFolder() ?: return
+
+        if (project != null) {
+            selectedBeatSaberFolder[project] = beatSaberFolder
         }
 
-        if (filesToRefresh.isNotEmpty() && project != null) {
-
-            // TODO: Make this only run if a `csproj.user` file has been created or modified, not all the time
-            // We do this to force ordering
-            // In other words, force it to refresh AFTER writing is done
-            // I'm not proud of this ugly code nesting at all nor hard coding this
-            ApplicationManager.getApplication().invokeLaterOnWriteThread {
-                ApplicationManager.getApplication().runWriteAction {
-                    ApplicationManager.getApplication().invokeLater {
-
-                        ProjectModelViewUpdater.fireUpdate(project) {
-                            it.updateAll()
-                        }
-                        ProjectModelViewUpdaterAsync.getInstance(project).requestUpdatePresentation()
-
-                        /// We have to hard code UnloadProjectAction.execute it seems unfortunately
-                        /// This is ugly, maybe find a way to get a component that references the
-                        // csproj directly so we can use DataContexts?
-                        val projects = folders.mapNotNull { it.project.getId(project) }
-
-                        application.saveAll()
-                        val command =
-                            UnloadCommand(projects.toList())
-
-                        project.solution.projectModelTasks.unloadProjects.runUnderProgress(
-                            command,
-                            project,
-                            "Unload ${projects.size} projects...",
-                            isCancelable = false,
-                            throwFault = false
-                        )
-
-                        // We do the same here sadly
-                        val command2 =
-                            ReloadCommand(projects.toList())
-
-                        project.solution.projectModelTasks.reloadProjects.runUnderProgress(
-                            command2,
-                            project,
-                            "Reload ${projects.size} projects...",
-                            isCancelable = false,
-                            throwFault = false,
-                        )
-                    }
-                    VfsUtil.markDirtyAndRefresh(true, false, false, *filesToRefresh.toTypedArray())
-                }
+        folders.forEach {
+            if(generate(it.projectFolder, it.csprojFile, beatSaberFolder)) {
+                filesToRefresh.add(it.projectFolder)
+                filesToRefresh.add(it.csprojFile)
             }
         }
+
+        ProjectUtils.refreshProjectWithFiles(folders, filesToRefresh, project)
     }
 
-    private fun generate(folder: File, csprojFile: File) {
+    private fun generate(folder: File, csprojFile: File, beatSaberFolder: String): Boolean {
         // Get the folder of the solution, then get the folder of the actual project
         val userFile = File(folder, "${csprojFile.name}.user")
 
         if (folder.exists() && isBeatSaberProject(csprojFile)) {
             if (userFile.exists()) {
-                updateFileContent(userFile)
+                return updateFileContent(userFile, beatSaberFolder)
             } else {
                 val userString = getBeatSaberFolder()
 
@@ -142,9 +66,11 @@ object BeatSaberGenerator {
                             VfsUtil.saveText(VfsUtil.findFileByIoFile(userFile, true)!!, content)
                         }
                     }
+                    return true
                 }
             }
         }
+        return false
     }
 
     // TODO: Make this more performant
@@ -178,9 +104,7 @@ object BeatSaberGenerator {
 
     // TODO: Clean this up using POJO if possible.
     // This merges the previous XML data with the new one
-    private fun updateFileContent(userCsprojFile: File) {
-        val beatSaberFolder = getBeatSaberFolder() ?: return
-
+    private fun updateFileContent(userCsprojFile: File, beatSaberFolder: String): Boolean {
         val file = VfsUtil.findFileByIoFile(userCsprojFile, true)!!
 
         var contents = ""
@@ -201,7 +125,7 @@ object BeatSaberGenerator {
                 ignoreCase = true
             )
         ) {
-            return
+            return false
         }
 
 
@@ -220,31 +144,31 @@ object BeatSaberGenerator {
         if (endIndex != contents.lastIndex)
             parsedContent = parsedContent.substring(0, parsedContent.indexOf(endString) + endString.length)
 
-        val xmlPreData = mapper.readTree(parsedContent)
+        val xmlPreData = ProjectUtils.xmlParser.readTree(parsedContent)
 
         val xmlData: ObjectNode = if (xmlPreData is ObjectNode) {
             xmlPreData
         } else {
-            mapper.createObjectNode()
+            ProjectUtils.xmlParser.createObjectNode()
         }
 
         // Modify
         val propertyGroupNodePre: JsonNode? = xmlData["PropertyGroup"]
         val propertyGroupNode: ObjectNode
         if (propertyGroupNodePre == null || propertyGroupNodePre.isNull || propertyGroupNodePre !is ObjectNode) {
-            propertyGroupNode = mapper.createObjectNode()
+            propertyGroupNode = ProjectUtils.xmlParser.createObjectNode()
             xmlData.set<ObjectNode>("PropertyGroup", propertyGroupNode)
         } else {
             propertyGroupNode = propertyGroupNodePre
         }
 
-        val node = mapper.createArrayNode()
+        val node = ProjectUtils.xmlParser.createArrayNode()
 
         node.add(beatSaberFolder)
 
         propertyGroupNode.set<JsonNode>("BeatSaberDir", node)
 
-        val writer = mapper.writer().withDefaultPrettyPrinter().withRootName("Project")
+        val writer = ProjectUtils.xmlParser.writer().withDefaultPrettyPrinter().withRootName("Project")
 
         // Merge xml
         val body = writer.writeValueAsString(xmlData)
@@ -292,6 +216,7 @@ object BeatSaberGenerator {
             }
         }
 
+        return true
     }
 
     private fun getBeatSaberFolder(project: Project? = null): String? {

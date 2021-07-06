@@ -1,6 +1,5 @@
 package com.github.fernthedev.bsmt_rider.settings
 
-import com.github.fernthedev.bsmt_rider.RiderProtocolHandler
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ConfigurationException
 import com.jetbrains.rd.util.lifetime.Lifetime
@@ -35,7 +34,10 @@ class AppSettingsConfigurable : Configurable {
         val settings: AppSettingsState = AppSettingsState.instance
 
 
-        var modified: Boolean = mySettingsComponent!!.beatSaberFolders.any { !settings.beatSaberFolders.contains(it) }
+        val uiFolders = mySettingsComponent!!.beatSaberFolders;
+
+        var modified: Boolean = uiFolders.any { !settings.beatSaberFolders.contains(it) }
+        modified = modified or settings.beatSaberFolders.any { !uiFolders.contains(it) }
         modified = modified or (mySettingsComponent!!.useDefaultFolder != settings.useDefaultFolder)
         modified = modified or (mySettingsComponent!!.defaultBeatSaberFolder != settings.defaultFolder)
         return modified
@@ -69,18 +71,18 @@ class AppSettingsConfigurable : Configurable {
 
 
         // TODO: Find a way to make request to Resharper even though it only runs on project load
-        if (false && component.beatSaberFolders.isEmpty() && settings.beatSaberFolders.isEmpty()) {
-
-            RiderProtocolHandler.instance.bsmtRidermodel.foundBeatSaberLocations.start(lifetime!!, null)
-                .result.advise(lifetime!!) {
-                    if (settings.beatSaberFolders.isEmpty()) {
-                        settings.beatSaberFolders = it.unwrap()
-                    }
-                    component.beatSaberFolders = settings.beatSaberFolders
-                }
-
-
-        }
+//        if (false && component.beatSaberFolders.isEmpty() && settings.beatSaberFolders.isEmpty()) {
+//
+//            RiderProtocolHandler.instance.bsmtRidermodel.foundBeatSaberLocations.start(lifetime!!, null)
+//                .result.advise(lifetime!!) {
+//                    if (settings.beatSaberFolders.isEmpty()) {
+//                        settings.beatSaberFolders = it.unwrap()
+//                    }
+//                    component.beatSaberFolders = settings.beatSaberFolders
+//                }
+//
+//
+//        }
     }
 
     override fun disposeUIResources() {

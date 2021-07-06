@@ -143,21 +143,21 @@ rdgen {
     hashFolder = "${buildDir}"
     packages = "model.rider"
 
-    generator {
-        language = "kotlin"
-        transform = "asis"
-        root = "model.rider.BSMT_RiderModel"
-        namespace = "com.jetbrains.rider.model"
-        directory = "$ktOutput"
-    }
-
-    generator {
-        language = "csharp"
-        transform = "reversed"
-        root = "model.rider.BSMT_RiderModel"
-        namespace = "JetBrains.Rider.Model"
-        directory = "$csOutput"
-    }
+//    generator {
+//        language = "kotlin"
+//        transform = "asis"
+//        root = "model.rider.BSMT_RiderModel"
+//        namespace = "com.jetbrains.rider.model"
+//        directory = "$ktOutput"
+//    }
+//
+//    generator {
+//        language = "csharp"
+//        transform = "reversed"
+//        root = "model.rider.BSMT_RiderModel"
+//        namespace = "JetBrains.Rider.Model"
+//        directory = "$csOutput"
+//    }
 }
 
 patchPluginXml {

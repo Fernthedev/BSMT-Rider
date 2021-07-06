@@ -36,6 +36,13 @@
             description="Generate a user.csproj">
       <add-to-group group-id="ToolsMenu" anchor="last"/>
     </action>
+    <action
+            id="BSMTRider.addBeatSaberReferenceToolsMenu"
+            class="com.github.fernthedev.bsmt_rider.actions.BeatSaberReferenceGeneratorAction"
+            text="Add Beat Saber assembly references"
+            description="Add Beat Saber reference">
+      <add-to-group group-id="ToolsMenu" anchor="last"/>
+    </action>
   </actions>
 
 </idea-plugin>

@@ -9,7 +9,7 @@ import com.jetbrains.rider.model.ConfigSettings
 import com.jetbrains.rider.protocol.ProtocolManager
 
 // TODO: This doesn't work
-class RiderProtocolHandler {
+private class RiderProtocolHandler {
     companion object {
         val instance: RiderProtocolHandler
             get() = ApplicationManager.getApplication().getService(RiderProtocolHandler::class.java)

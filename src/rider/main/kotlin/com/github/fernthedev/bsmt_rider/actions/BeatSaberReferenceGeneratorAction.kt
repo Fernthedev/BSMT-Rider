@@ -1,26 +1,24 @@
 package com.github.fernthedev.bsmt_rider.actions
 
-import com.github.fernthedev.bsmt_rider.BeatSaberGenerator
+import com.github.fernthedev.bsmt_rider.BeatSaberReferenceManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.progress.runBackgroundableTask
-import com.intellij.workspaceModel.ide.WorkspaceModel
 import com.jetbrains.rider.projectView.workspace.ProjectModelEntity
-import com.jetbrains.rider.projectView.workspace.findProjects
 
 
-class UserCSProjAction : BeatSaberProjectAction() {
-    companion object {
-        var findProjects: List<ProjectModelEntity>? = null
-    }
+class BeatSaberReferenceGeneratorAction : BeatSaberProjectAction() {
+
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.getData(CommonDataKeys.PROJECT)
 
         if (project != null && e.presentation.isEnabledAndVisible && findProjects != null) {
-            runBackgroundableTask("Create user.csproj", project) {
-                BeatSaberGenerator.locateFoldersAndGenerate(WorkspaceModel.getInstance(project).findProjects() ,project)
+            runBackgroundableTask("Adding to Beat Saber References", project) {
+                BeatSaberReferenceManager.askToAddReferences(project)
             }
         }
     }
+
+
 }
