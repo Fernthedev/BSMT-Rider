@@ -51,7 +51,7 @@ namespace ReSharperPlugin.BSMT_Rider
                 customPathBox));
 
             return new RdProjectTemplateGroupParameter(Name, "BeatSaberPath",
-                !possiblePaths.Any() ? possiblePaths.Last() : string.Empty, null, options);
+                possiblePaths.Any() ? possiblePaths.Last() : string.Empty, null, options);
         }
     }
 

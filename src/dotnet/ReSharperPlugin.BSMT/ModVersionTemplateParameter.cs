@@ -32,7 +32,7 @@ namespace ReSharperPlugin.BSMT_Rider
         }
     }
 
-    [ShellComponent]
+//    [ShellComponent]
     public class ModVersionTemplateParameterProvider : IDotNetTemplateParameterProvider
     {
         public int Priority => 50;
