@@ -12,6 +12,12 @@ object BeatSaberUtils {
     @OptIn(ExperimentalPathApi::class)
     fun getAssembliesOfBeatSaber(beatSaberPath: String): String = Path(beatSaberPath, "Beat Saber_Data", "Managed").toString()
 
+    @OptIn(ExperimentalPathApi::class)
+    fun getLibsOfBeatSaber(beatSaberPath: String): String = Path(beatSaberPath, "Libs").toString()
+
+    @OptIn(ExperimentalPathApi::class)
+    fun getPluginsOfBeatSaber(beatSaberPath: String): String = Path(beatSaberPath, "Plugins").toString()
+
     fun locateBeatSaberProjects(items: List<ProjectModelEntity>?): List<BeatSaberFolders> {
         if (items == null)
             return emptyList()

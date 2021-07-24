@@ -101,11 +101,13 @@ object BeatSaberReferenceManager {
             project.getBeatSaberSelectedDir() ?: return // TODO: Make this get the beat saber dir from csproj.user?
 
         val managedPath = BeatSaberUtils.getAssembliesOfBeatSaber(path)
+        val libsPath = BeatSaberUtils.getLibsOfBeatSaber(path)
+        val pluginsPath = BeatSaberUtils.getPluginsOfBeatSaber(path)
 
         var refsFromDialogue = ArrayList<File>()
 
         ApplicationManager.getApplication().invokeAndWait {
-            val dialogue = BeatSaberReferencesDialogue(project, managedPath, refs)
+            val dialogue = BeatSaberReferencesDialogue(project, arrayOf(managedPath, libsPath, pluginsPath), refs)
 
             if (dialogue.showAndGet()) {
                 refsFromDialogue = dialogue.references

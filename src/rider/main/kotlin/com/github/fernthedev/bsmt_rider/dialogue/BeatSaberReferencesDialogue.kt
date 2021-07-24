@@ -14,22 +14,32 @@ import javax.swing.table.AbstractTableModel
 
 
 /// $(Beat_Saber_Path)\Beat Saber_Data\Managed
-class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: String, existingReferences: List<ReferenceXML>) : DialogWrapper(project) {
+class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String>, existingReferences: List<ReferenceXML>) : DialogWrapper(project) {
     private val _foundBeatSaberReferences: List<File>
     init {
-        val beatSaberFolder = File(beatSaberPath)
+        val beatSaberFolders = beatSaberPath.map { File(it) }.filter { it.exists() && it.isDirectory }
 
-        if (!beatSaberFolder.exists() || !beatSaberFolder.isDirectory)
-            throw IllegalArgumentException("Beat saber folder $beatSaberFolder does not exist or is not a folder!")
+        if (beatSaberFolders.isEmpty())
+            throw IllegalArgumentException("Beat saber folders are empty or not found!")
 
         val existingReferencesMatch = existingReferences.map {
                 ref -> PathUtil.getFileName(ref.stringHintPath)
         }
 
-        _foundBeatSaberReferences = beatSaberFolder.listFiles {
-                it -> it.extension.toLowerCase() == "dll" &&
-                existingReferencesMatch.none { ref -> ref == it.name
-                } }!!.toList()
+
+
+        _foundBeatSaberReferences = beatSaberFolders.map { folder ->
+            folder.listFiles { it ->
+                it.extension.toLowerCase() == "dll" &&
+                        existingReferencesMatch.none { ref ->
+                            ref == it.name
+                        }
+            }
+            // Merge list
+        }.reduce { acc, arrayOfFiles ->
+            acc + arrayOfFiles
+            // Remove duplicates
+        }.distinct()
     }
 
     private val _beatSaberReferences = JBTable(BeatSaberReferenceTable(_foundBeatSaberReferences))
