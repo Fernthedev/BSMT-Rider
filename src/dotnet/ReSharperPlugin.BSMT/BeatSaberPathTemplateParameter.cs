@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Application;
@@ -30,7 +31,10 @@ namespace ReSharperPlugin.BSMT_Rider
             }
 
 
-            var possiblePaths = BeatSaberPathUtils.GetInstallDir(); // Shell.Instance.GetComponent<ProjectProtocolHandler>().BsmtRiderModel.GetUserSettings.Sync(null).ConfiguredBeatSaberLocations;
+            var os = Environment.OSVersion.Platform;
+            var windows = os is PlatformID.WinCE or PlatformID.Win32S or PlatformID.Win32Windows or PlatformID.Win32NT;
+
+            var possiblePaths = windows ? BeatSaberPathUtils.GetInstallDir() : new List<string>(); // Shell.Instance.GetComponent<ProjectProtocolHandler>().BsmtRiderModel.GetUserSettings.Sync(null).ConfiguredBeatSaberLocations;
             var options = new List<RdProjectTemplateGroupOption>();
 
             foreach (var path in possiblePaths)
