@@ -20,6 +20,8 @@
     <applicationConfigurable parentId="tools" instance="com.github.fernthedev.bsmt_rider.settings.AppSettingsConfigurable"
                              id="com.github.fernthedev.bsmt_rider.settings.AppSettingsConfigurable"
                              displayName="BSMT Rider"/>
+
+    <fileType name="XML" extensions="bsml" />
   </extensions>
 
   <project-components>
