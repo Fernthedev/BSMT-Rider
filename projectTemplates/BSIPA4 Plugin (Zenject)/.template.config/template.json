@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Raine",
+  "name": "BSIPA4 Plugin (Zenject)",
+  "description": "A basic template for a new Beat Saber IPA plugin.",
+  "defaultName": "BSPlugin",
+  "classifications": ["Common", "Library", "BSMT", "games"],
+  "identity": "BSMT_Rider",
+  "groupIdentity": "Fernthedev.BSMT",
+  "shortName": "bspluginZenject",
+  "tags": {
+    "type": "project",
+    "language": "C#",
+    "platform": ".NET"
+  },
+  "sourceName": "$safeprojectname$",
+  "preferNameDirectory": true,
+  "guids": [
+    "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"
+  ],
+  "symbols": {
+    "Framework": {
+      "type": "parameter",
+      "description": "The target framework for the project.",
+      "datatype": "text",
+      "replaces": "4.7.2",
+      "isRequired": true,
+      "defaultValue": "<FullTargetFramework>"
+    },
+    "PathToBeatSaber": {
+      "type": "parameter",
+      "description": "Path to BeatSaber directory. May require a \\ at the end",
+      "datatype": "text",
+      "isRequired": true,
+      "replaces": "$SomeBeatSaberDir$"
+    },
+    "ModVersion": {
+      "type": "parameter",
+      "description": "Mod version",
+      "datatype": "text",
+      "replaces": "$ModVersion$",
+      "defaultValue": "1.0.0"
+    },
+    "ModAuthor": {
+      "type": "parameter",
+      "description": "Mod Author",
+      "datatype": "text",
+      "replaces": "$ModAuthor$"
+    },
+    "ModDesc": {
+      "type": "parameter",
+      "description": "Mod Description",
+      "datatype": "text",
+      "replaces": "$ModDesc$"
+    },
+    "ModId": {
+      "type": "parameter",
+      "description": "Mod ID, should be unique",
+      "datatype": "text",
+      "replaces": "$ModId$"
+    },
+    "BeatSaberVersion": {
+      "type": "parameter",
+      "description": "Beat Saber Version",
+      "datatype": "text",
+      "replaces": "$BSVer$",
+      "defaultValue": "1.16.4"
+    },
+    "ProjectHome": {
+      "type": "parameter",
+      "description": "Beat Saber Version",
+      "datatype": "text",
+      "replaces": "$ProjectHome$",
+      "defaultValue": ""
+    },
+    "ProjectSource": {
+      "type": "parameter",
+      "description": "Beat Saber Version",
+      "datatype": "text",
+      "replaces": "$ProjectSource$",
+      "defaultValue": ""
+    },
+    "DonateURL": {
+      "type": "parameter",
+      "description": "Beat Saber Version",
+      "datatype": "text",
+      "replaces": "$DonateURL$",
+      "defaultValue": ""
+    }
+  },
+  "primaryOutputs": [
+    { "path": "FlowCoordinators/$safeprojectname$FlowCoordinator.cs" },
+    { "path": "Configuration/PluginConfig.cs" },
+    { "path": "UI/ViewControllers/$safeprojectname$Controller.cs" },
+    { "path": "UI/BSML/$safeprojectname$View.bsml" },
+    { "path": "UI/$safeprojectname$View.cs" },
+    { "path": "Installers/$safeprojectname$MenuInstaller.cs" },
+    { "path": "Installers/$safeprojectname$GameInstaller.cs" },
+    { "path": "Installers/$safeprojectname$AppInstaller.cs" },
+    { "path": "Managers/$safeprojectname$Manager.cs" },
+    { "path": "Plugin.cs" },
+    { "path": "$safeprojectname$.csproj" },
+    { "path": "$safeprojectname$.csproj.user" }
+  ],
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "include": "*.csproj.user"
+        }
+      ]
+    }
+  ],
+  "postActions": [
+    {
+      "description": "Opens the four script files",
+      "manualInstructions": [],
+      "actionId": "84C0DA21-51C8-4541-9940-6CA19AF04EE6",
+      "args": {
+        "files": "1;2;3"
+      },
+      "continueOnError": true
+    }
+  ]
+}
