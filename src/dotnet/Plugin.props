@@ -1,12 +1,12 @@
 <Project>
 
   <PropertyGroup>
-    <SdkVersion>2021.1.1</SdkVersion>
+    <SdkVersion>2021.3.0-eap07</SdkVersion>
 
     <Title>BSMT-Rider</Title>
-    <Description>Description</Description>
+    <Description>BSMT Esxtension for Rider</Description>
 
-    <Authors>Author</Authors>
+    <Authors>Fernthedev</Authors>
     <Copyright>Copyright $([System.DateTime]::Now.Year) Maintainers of BSMT-Rider</Copyright>
     <PackageTags>resharper plugin</PackageTags>
 

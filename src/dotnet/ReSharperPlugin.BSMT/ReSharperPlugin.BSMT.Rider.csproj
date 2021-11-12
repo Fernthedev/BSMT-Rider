@@ -8,7 +8,7 @@
     <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
     <PropertyGroup>
-        <TargetFramework>net461</TargetFramework>
+        <TargetFramework>net48</TargetFramework>
         <AssemblyName>ReSharperPlugin.BSMT</AssemblyName>
         <RootNamespace>$(AssemblyName)</RootNamespace>
         <IsPackable>false</IsPackable>
@@ -17,6 +17,7 @@
 
     <ItemGroup>
         <PackageReference Include="JetBrains.Rider.SDK" Version="$(SdkVersion)" />
+        <PackageReference Include="JetBrains.Rider.Rider.Backend" Version="213.0.20211105.80453-eap07" />
     </ItemGroup>
 
     <!-- TODO: uncomment for xaml icons -->

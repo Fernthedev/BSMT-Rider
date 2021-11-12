@@ -1,10 +1,7 @@
 using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Application;
-using JetBrains.ReSharper.Host.Features.ProjectModel.ProjectTemplates.DotNetExtensions;
-using JetBrains.ReSharper.Host.Features.ProjectModel.ProjectTemplates.DotNetTemplates;
+using JetBrains.Rider.Backend.Features.ProjectModel.ProjectTemplates.DotNetExtensions;
+using JetBrains.Rider.Backend.Features.ProjectModel.ProjectTemplates.DotNetTemplates;
 using JetBrains.Rider.Model;
-using JetBrains.Util;
 
 
 namespace ReSharperPlugin.BSMT_Rider

@@ -17,7 +17,8 @@ class AppSettingsConfigurable : Configurable {
 
     // A default constructor with no arguments is required because this implementation
     // is registered as an applicationConfigurable EP
-    override fun getDisplayName(): @Nls(capitalization = Nls.Capitalization.Title) String {
+    @Nls(capitalization = Nls.Capitalization.Title)
+    override fun getDisplayName(): String {
         return "BSMT Rider: Settings"
     }
 
