@@ -4,6 +4,7 @@ using System.Xml;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp;
 using JetBrains.ReSharper.Psi.Tree;
+using JetBrains.ReSharper.Psi.Xml;
 using JetBrains.ReSharper.Psi.Xml.Tree;
 using JetBrains.Util.DataStructures;
 
@@ -80,6 +81,6 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
         public string ShortName => _id;
 
         public bool CaseSensitiveName => true;
-        public PsiLanguageType PresentationLanguage => CSharpLanguage.Instance; //XmlLanguage.Instance;
+        public PsiLanguageType PresentationLanguage => BSMLLanguage.Instance!; //XmlLanguage.Instance;
     }
 }

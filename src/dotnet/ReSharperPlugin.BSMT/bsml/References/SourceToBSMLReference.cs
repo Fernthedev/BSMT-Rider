@@ -16,13 +16,13 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
     // Basically it tries to check if the code in C#
     // matches an id to the BSML code.
     // Auto complete should match for all possible references
-    public class BSMLReference : TreeReferenceBase<ILiteralExpression>,
+    public class SourceToBSMLReference : TreeReferenceBase<ILiteralExpression>,
         ICompletableReference,
         IAccessContext
     {
         private readonly List<Tuple<IXmlTag, IXmlAttribute>> _tags;
 
-        public BSMLReference([NotNull] ILiteralExpression owner, List<Tuple<IXmlTag, IXmlAttribute>> tags, IPsiServices psiServices, string name) : base(owner)
+        public SourceToBSMLReference([NotNull] ILiteralExpression owner, List<Tuple<IXmlTag, IXmlAttribute>> tags, IPsiServices psiServices, string name) : base(owner)
         {
             _tags = tags;
         }
@@ -79,7 +79,7 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
 
             var newOwner = literalAlterer.Expression;
             if (!myOwner.Equals(newOwner))
-                return newOwner.FindReference<BSMLReference>() ?? this;
+                return newOwner.FindReference<SourceToBSMLReference>() ?? this;
             return this;
         }
 
