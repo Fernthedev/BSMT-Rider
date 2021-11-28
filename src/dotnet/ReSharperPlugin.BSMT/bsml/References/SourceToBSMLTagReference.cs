@@ -16,15 +16,21 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
     // Basically it tries to check if the code in C#
     // matches an id to the BSML code.
     // Auto complete should match for all possible references
-    public class SourceToBSMLReference : TreeReferenceBase<ILiteralExpression>,
+    public class SourceToBSMLTagReference : TreeReferenceBase<ILiteralExpression>,
         ICompletableReference,
         IAccessContext
     {
-        private readonly List<Tuple<IXmlTag, IXmlAttribute>> _tags;
+        // tag:tag_id
+        private readonly List<Tuple<IXmlTag, string>> _tags;
 
-        public SourceToBSMLReference([NotNull] ILiteralExpression owner, List<Tuple<IXmlTag, IXmlAttribute>> tags, IPsiServices psiServices, string name) : base(owner)
+        public SourceToBSMLTagReference([NotNull] ILiteralExpression owner, List<Tuple<IXmlTag, string>> tags, IPsiServices psiServices, string name) : base(owner)
         {
             _tags = tags;
+        }
+
+        public SourceToBSMLTagReference([NotNull] ILiteralExpression owner, Tuple<IXmlTag, string> tags, IPsiServices psiServices, string name) : base(owner)
+        {
+            _tags = new List<Tuple<IXmlTag, string>> { tags };
         }
 
         public override ResolveResultWithInfo ResolveWithoutCache()
@@ -41,7 +47,7 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
         {
             // SymbolTable symbolTable = new SymbolTable(_psiServices);
 
-            var elements = new List<IDeclaredElement>(_tags.Select(tag => new BSMLTagElement(tag.Item1, tag.Item2.UnquotedValue)).ToList());
+            var elements = new List<IDeclaredElement>(_tags.Select(tag => new BSMLTagElement(tag.Item1, tag.Item2)).ToList());
             // var elements = new List<IDeclaredElement> {new BSMLTagElement(_tags, name)};
             var symbolTable = ResolveUtil.CreateSymbolTable(elements, 0);
 
@@ -79,7 +85,7 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
 
             var newOwner = literalAlterer.Expression;
             if (!myOwner.Equals(newOwner))
-                return newOwner.FindReference<SourceToBSMLReference>() ?? this;
+                return newOwner.FindReference<SourceToBSMLTagReference>() ?? this;
             return this;
         }
 

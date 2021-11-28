@@ -17,14 +17,14 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
         private readonly IXmlTag _tag;
         private readonly string _id;
 
-        private readonly Lazy<BSMLTagDeclaration> _bsmlTagDeclaration;
+        private readonly BSMLTagDeclaration _bsmlTagDeclaration;
 
         public BSMLTagElement(IXmlTag tag, string id)
         {
             _tag = tag;
             _id = id;
 
-            _bsmlTagDeclaration = new Lazy<BSMLTagDeclaration>(() => new BSMLTagDeclaration(_tag, this));
+            _bsmlTagDeclaration = new BSMLTagDeclaration(_tag, this);
         }
 
 
@@ -40,12 +40,12 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
 
         public bool IsSynthetic()
         {
-            return _bsmlTagDeclaration.Value.IsSynthetic();
+            return _bsmlTagDeclaration.IsSynthetic();
         }
 
         public IList<IDeclaration> GetDeclarations()
         {
-            return new List<IDeclaration> {_bsmlTagDeclaration.Value};
+            return new List<IDeclaration> {_bsmlTagDeclaration};
         }
 
         public IList<IDeclaration> GetDeclarationsIn(IPsiSourceFile sourceFile)
@@ -55,7 +55,7 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
 
         public HybridCollection<IPsiSourceFile> GetSourceFiles()
         {
-            return new(_tag.GetSourceFile()!);
+            return new HybridCollection<IPsiSourceFile>(_tag.GetSourceFile()!);
         }
 
         public bool HasDeclarationsIn(IPsiSourceFile sourceFile)

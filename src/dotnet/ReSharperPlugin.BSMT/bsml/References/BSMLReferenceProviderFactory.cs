@@ -29,6 +29,8 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
     {
         private readonly ILogger _logger;// = JetBrains.Util.Logging._logger.GetLogger(nameof(BsmlReferenceProviderFactory));
 
+        private readonly Dictionary<ICSharpFile, BSMLReferenceFactory> _referenceFactories = new();
+
         public BsmlReferenceProviderFactory(Lifetime lifetime, ILogger logger)
         {
             Changed = new Signal<IReferenceProviderFactory>(lifetime, GetType().FullName!);
@@ -39,7 +41,7 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
 
         // This code is such a mess
         // I hate it
-        public IReferenceFactory CreateFactory(IPsiSourceFile sourceFile, IFile file, IWordIndex wordIndexForChecks)
+        public IReferenceFactory? CreateFactory(IPsiSourceFile sourceFile, IFile file, IWordIndex wordIndexForChecks)
         {
             _logger.Info("source file language factory");
 
@@ -166,7 +168,12 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
                 //     }
                 // }
 
-                return new BSMLReferenceFactory(cSharpFile);
+                if (!_referenceFactories.TryGetValue(cSharpFile, out var factory))
+                {
+                    _referenceFactories[cSharpFile] = factory = new BSMLReferenceFactory(cSharpFile);
+                }
+
+                return factory;
             }
 
             if (sourceFile.PrimaryPsiLanguage.Is<XmlLanguage>() || sourceFile.PrimaryPsiLanguage.Is<BSMLLanguage>())

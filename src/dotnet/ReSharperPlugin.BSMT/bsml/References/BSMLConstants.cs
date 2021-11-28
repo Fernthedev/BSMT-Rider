@@ -6,8 +6,10 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
 {
     public class BSMLConstants
     {
+        public const string BsmlAttributesNamespace = "BeatSaberMarkupLanguage.Attributes";
+
         public static readonly ClrTypeName BsmlViewDefinitionAttribute =
-            new("BeatSaberMarkupLanguage.Attributes.ViewDefinitionAttribute");
+            new($"{BsmlAttributesNamespace}.ViewDefinitionAttribute");
 
         public static readonly ClrTypeName BsmlViewControllerParent = new("BeatSaberMarkupLanguage.ViewControllers.BSMLViewController");
 
@@ -15,13 +17,13 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
             new List<string>
             {
                 "UIComponent"
-            }.Select(s => new ClrTypeName($"BeatSaberMarkupLanguage.Attributes.{s}")).ToList();
+            }.Select(s => new ClrTypeName($"{BsmlAttributesNamespace}.{s}")).ToList();
 
         public static readonly List<ClrTypeName> BsmlToSourceAttributes =
             new List<string>
             {
                 "UIValue",
                 "UIAction"
-            }.Select(s => new ClrTypeName($"BeatSaberMarkupLanguage.Attributes.{s}")).ToList();
+            }.Select(s => new ClrTypeName($"{BsmlAttributesNamespace}.{s}")).ToList();
     }
 }
