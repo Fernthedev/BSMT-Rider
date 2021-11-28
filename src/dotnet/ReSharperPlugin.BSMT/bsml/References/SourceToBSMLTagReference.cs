@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.ExtensionsAPI.Resolve;
 using JetBrains.ReSharper.Psi.Modules;
@@ -16,19 +15,19 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
     // Basically it tries to check if the code in C#
     // matches an id to the BSML code.
     // Auto complete should match for all possible references
-    public class SourceToBSMLTagReference : TreeReferenceBase<ILiteralExpression>,
+    public class SourceToBsmlTagReference : TreeReferenceBase<ILiteralExpression>,
         ICompletableReference,
         IAccessContext
     {
         // tag:tag_id
         private readonly List<Tuple<IXmlTag, string>> _tags;
 
-        public SourceToBSMLTagReference([NotNull] ILiteralExpression owner, List<Tuple<IXmlTag, string>> tags, IPsiServices psiServices, string name) : base(owner)
+        public SourceToBsmlTagReference(ILiteralExpression owner, List<Tuple<IXmlTag, string>> tags, IPsiServices psiServices, string name) : base(owner)
         {
             _tags = tags;
         }
 
-        public SourceToBSMLTagReference([NotNull] ILiteralExpression owner, Tuple<IXmlTag, string> tags, IPsiServices psiServices, string name) : base(owner)
+        public SourceToBsmlTagReference(ILiteralExpression owner, Tuple<IXmlTag, string> tags, IPsiServices psiServices, string name) : base(owner)
         {
             _tags = new List<Tuple<IXmlTag, string>> { tags };
         }
@@ -85,7 +84,7 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
 
             var newOwner = literalAlterer.Expression;
             if (!myOwner.Equals(newOwner))
-                return newOwner.FindReference<SourceToBSMLTagReference>() ?? this;
+                return newOwner.FindReference<SourceToBsmlTagReference>() ?? this;
             return this;
         }
 

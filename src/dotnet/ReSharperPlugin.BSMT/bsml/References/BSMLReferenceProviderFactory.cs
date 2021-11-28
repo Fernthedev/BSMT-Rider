@@ -1,26 +1,16 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using JetBrains.Collections;
 using JetBrains.DataFlow;
 using JetBrains.Lifetimes;
-using JetBrains.Metadata.Utils;
-using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Caches;
 using JetBrains.ReSharper.Psi.CSharp;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
-using JetBrains.ReSharper.Psi.Files;
-using JetBrains.ReSharper.Psi.Paths;
 using JetBrains.ReSharper.Psi.Resolve;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.ReSharper.Psi.Xml;
 using JetBrains.ReSharper.Psi.Xml.Tree;
-using JetBrains.RiderTutorials.Utils;
 using JetBrains.Util;
-using ReSharperPlugin.BSMT_Rider.utils;
-using Xunit.Sdk;
 
 namespace ReSharperPlugin.BSMT_Rider.bsml
 {
@@ -29,7 +19,10 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
     {
         private readonly ILogger _logger;// = JetBrains.Util.Logging._logger.GetLogger(nameof(BsmlReferenceProviderFactory));
 
-        private readonly Dictionary<ICSharpFile, BSMLReferenceFactory> _referenceFactories = new();
+        private readonly Dictionary<ICSharpFile, BSMLCSReferenceFactory> _referenceCsFactories = new();
+        private readonly Dictionary<IXmlFile, BsmlXmlReferenceFactory> _referenceXmlFactories = new();
+
+        private readonly BSMLFileManager _bsmlFileManager = new();
 
         public BsmlReferenceProviderFactory(Lifetime lifetime, ILogger logger)
         {
@@ -168,17 +161,22 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
                 //     }
                 // }
 
-                if (!_referenceFactories.TryGetValue(cSharpFile, out var factory))
+                if (!_referenceCsFactories.TryGetValue(cSharpFile, out var factory))
                 {
-                    _referenceFactories[cSharpFile] = factory = new BSMLReferenceFactory(cSharpFile);
+                    _referenceCsFactories[cSharpFile] = factory = new BSMLCSReferenceFactory(cSharpFile, _bsmlFileManager);
                 }
 
                 return factory;
             }
-
-            if (sourceFile.PrimaryPsiLanguage.Is<XmlLanguage>() || sourceFile.PrimaryPsiLanguage.Is<BSMLLanguage>())
+            else
+            if ((sourceFile.PrimaryPsiLanguage.Is<XmlLanguage>() || sourceFile.PrimaryPsiLanguage.Is<BSMLLanguage>()) && file is IXmlFile xmlFile)
             {
+                if (!_referenceXmlFactories.TryGetValue(xmlFile, out var factory))
+                {
+                    _referenceXmlFactories[xmlFile] = factory = new BsmlXmlReferenceFactory(xmlFile, _bsmlFileManager);
+                }
 
+                return factory;
             }
 
             return null;

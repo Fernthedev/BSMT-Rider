@@ -1,16 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.ReSharper.PsiGen.Util;
-using NuGet;
 
 namespace ReSharperPlugin.BSMT_Rider.utils
 {
     public static class TreeNodeExtensions
     {
-        public static T GetParentOfTypeRecursiveNotStupid<T>([NotNull] this ITreeNode node) where T : class
+        public static T? GetParentOfTypeRecursiveNotStupid<T>(this ITreeNode node) where T : class
         {
             while (true)
             {
@@ -25,7 +23,7 @@ namespace ReSharperPlugin.BSMT_Rider.utils
             return default;
         }
 
-        public static List<T> GetTypeInFile<T>([NotNull] this ICSharpFile file, IEnumerable<ITreeNode> nodes = null, List<T> list = null) where T : class
+        public static List<T> GetTypeInFile<T>(this ICSharpFile file, IEnumerable<ITreeNode>? nodes = null, List<T>? list = null) where T : class
         {
             list ??= new List<T>();
 
