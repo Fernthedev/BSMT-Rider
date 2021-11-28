@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,19 +11,38 @@ using JetBrains.ReSharper.Psi.Files;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.ReSharper.Psi.Xml;
 using JetBrains.ReSharper.Psi.Xml.Tree;
+using JetBrains.RiderTutorials.Utils;
 using JetBrains.Util;
 using JetBrains.Util.Dotnet.TargetFrameworkIds;
 using ReSharperPlugin.BSMT_Rider.utils;
 
 namespace ReSharperPlugin.BSMT_Rider.bsml
 {
-    public class BSMLFileManager
+    public record BsmlXmlData
+    {
+        public readonly ConcurrentDictionary<string, IXmlTag> IdToTag = new();
+        public readonly ConcurrentDictionary<IXmlAttribute, string> AttributeToCsVariable = new();
+
+        public Dictionary<string, IXmlTag> GetIdentifiedTags()
+        {
+            return new Dictionary<string, IXmlTag>(IdToTag);
+        }
+
+        public Dictionary<IXmlAttribute, string> GetAttributeToNameMap()
+        {
+            return new Dictionary<IXmlAttribute, string>(AttributeToCsVariable);
+        }
+    }
+    
+    public class BsmlFileManager
     {
         private readonly Dictionary<VirtualFileSystemPath, IXmlFile?> _xmlFiles = new();
 
         private readonly Dictionary<IPsiSourceFile, DateTime> _modificationMap = new();
 
         private readonly Dictionary<ITypeDeclaration, IXmlFile?> _classToBsml = new();
+
+        private readonly Dictionary<IXmlFile, BsmlXmlData> _bsmlXmlDatas = new();
 
         private static VirtualFileSystemPath ParseBsmlAssemblyPath(IProject project, string path)
         {
@@ -63,7 +83,7 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
         /// </summary>
         /// <param name="cSharpFile"></param>
         /// <returns></returns>
-        public Dictionary<ITypeDeclaration, IXmlFile?> GetAssociatedBSMLFile(ICSharpFile cSharpFile)
+        public Dictionary<ITypeDeclaration, IXmlFile?> GetAssociatedBsmlFiles(ICSharpFile cSharpFile)
         {
             var project = cSharpFile.GetProject()!;
             var sourceFile = cSharpFile.GetSourceFile()!;
@@ -197,7 +217,7 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
             return elementToMap;
         }
 
-        public List<ITypeDeclaration> FindClassesAssociatedToBSMLFile(IXmlFile xmlFile)
+        public IEnumerable<ITypeDeclaration> FindClassesAssociatedToBsmlFile(IXmlFile xmlFile)
         {
             List<ITypeDeclaration> declarations = new();
 
@@ -210,38 +230,68 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
             return declarations;
         }
 
-        // /// <summary>
-        // ///
-        // /// Returns a dictionary association of a C# class -> XmlFile
-        // ///
-        // /// a XmlFile value can be null if the C# class references a BSML file that could not be found
-        // ///
-        // /// </summary>
-        // /// <param name="cSharpFile"></param>
-        // /// <returns></returns>
-        // public Dictionary<ITypeDeclaration, IXmlFile?> GetAssociatedBSMLFile(ITypeDeclaration clazz, IAttribute viewDefinitionAttribute, bool validate = true)
-        // {
-        //     if (validate)
-        //     {
-        //         var clrType = viewDefinitionAttribute.GetParentOfTypeRecursiveNotStupid<ITypeDeclaration>();
-        //
-        //         if (clrType is null)
-        //             throw new ArgumentException($"{viewDefinitionAttribute} does not have type declaration?");
-        //
-        //         if (viewDefinitionAttribute?.Name.Reference.Resolve().DeclaredElement is not IClass attributeClass)
-        //         {
-        //             throw new ArgumentException("what");
-        //         }
-        //
-        //         var attributeClassClrName = attributeClass.GetClrName();
-        //
-        //         if (!Equals(attributeClassClrName, BSMLConstants.BsmlViewDefinitionAttribute))
-        //             throw new ArgumentException(
-        //                 $"{viewDefinitionAttribute} is not expected {BSMLConstants.BsmlViewDefinitionAttribute}");
-        //     }
-        //
-        //     var viewPath = viewDefinitionAttribute.ConstructorArgumentExpressions.FirstOrDefault()?.ConstantValue.Value as string;
-        //
-        // }
+
+        public BsmlXmlData? ParseBsml(IXmlFile bsmlFile)
+        {
+            var project = bsmlFile.GetProject();
+            if (project is null)
+                return null;
+
+            var sourceFile = bsmlFile.GetSourceFile();
+
+            if (sourceFile is null)
+                return null;
+
+            if (!_bsmlXmlDatas.TryGetValue(bsmlFile, out var bsmlXmlData))
+            {
+                _bsmlXmlDatas[bsmlFile] = bsmlXmlData = new BsmlXmlData();
+            }
+            
+
+            if (!HasBeenModified(sourceFile))
+                return bsmlXmlData;
+
+
+            // Parse XML file
+            var tagPredicate = new Func<IXmlAttribute, bool>(attribute => attribute.AttributeName == "id");
+
+            var tags = bsmlFile.GetChildrenInSubtrees()
+                .SafeOfType<IXmlTag>()
+                .Where(tag => tag.IsValid())
+                .ToList();
+
+            Dictionary<IXmlTag, string> identifiedTags = tags
+                .ToDictionary(tag => tag, tag => tag.GetAttributes().FirstOrDefault(tagPredicate)?.UnquotedValue)!;
+
+
+            // Find all attributes with "~" prefix
+            Dictionary<IXmlAttribute, string> variableMaps = tags
+                .SelectMany(tag => tag.GetAttributes().ToList())
+                .Where(attribute => attribute.UnquotedValue.StartsWith(BSMLConstants.BsmlVarPrefix))
+                .ToDictionary(attribute => attribute, attribute => attribute.UnquotedValue);
+
+            var idToTag = bsmlXmlData.IdToTag;
+            var attributeToCsVariable = bsmlXmlData.AttributeToCsVariable;
+
+            idToTag.Clear();
+            foreach (var (tag, id) in identifiedTags)
+            {
+                if (tag is not null && id is not null)
+                {
+                    idToTag[id] = tag;
+                }
+            }
+            
+            attributeToCsVariable.Clear();
+            foreach (var (attribute, varName) in variableMaps)
+            {
+                attributeToCsVariable[attribute] = varName;
+            }
+
+
+            MarkModification(sourceFile);
+
+            return bsmlXmlData;
+        }
     }
 }

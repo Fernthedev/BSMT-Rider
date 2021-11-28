@@ -20,17 +20,18 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
         IAccessContext
     {
         // tag:tag_id
-        private readonly List<Tuple<IXmlTag, string>> _tags;
+        private readonly ISymbolTable _symbolTable;
 
-        public SourceToBsmlTagReference(ILiteralExpression owner, List<Tuple<IXmlTag, string>> tags, IPsiServices psiServices, string name) : base(owner)
+        public SourceToBsmlTagReference(ILiteralExpression owner, IEnumerable<Tuple<IXmlTag, string>> tags) : base(owner)
         {
-            _tags = tags;
+            List<Tuple<IXmlTag, string>> tags1 = tags.ToList();
+            List<IDeclaredElement> elements = new(tags1.Select(tag => new BSMLTagElement(tag.Item1, tag.Item2)).ToList());
+            _symbolTable = ResolveUtil.CreateSymbolTable(elements, 0);
         }
 
-        public SourceToBsmlTagReference(ILiteralExpression owner, Tuple<IXmlTag, string> tags, IPsiServices psiServices, string name) : base(owner)
-        {
-            _tags = new List<Tuple<IXmlTag, string>> { tags };
-        }
+        public SourceToBsmlTagReference(ILiteralExpression owner, Tuple<IXmlTag, string> tags) : this(owner,
+            new List<Tuple<IXmlTag, string>> { tags })
+        {}
 
         public override ResolveResultWithInfo ResolveWithoutCache()
         {
@@ -44,34 +45,19 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
 
         public override ISymbolTable GetReferenceSymbolTable(bool useReferenceName)
         {
-            // SymbolTable symbolTable = new SymbolTable(_psiServices);
-
-            var elements = new List<IDeclaredElement>(_tags.Select(tag => new BSMLTagElement(tag.Item1, tag.Item2)).ToList());
-            // var elements = new List<IDeclaredElement> {new BSMLTagElement(_tags, name)};
-            var symbolTable = ResolveUtil.CreateSymbolTable(elements, 0);
-
-
-            // SymbolTableBuilder.GetTable(new SymbolInfo())
-            // var symbolTable = SymbolTableBuilder.GetTable(_tags).Distinct();
-
             var exactNameFilter = new ExactNameFilter(GetName());
 
             return useReferenceName
-                ? symbolTable.Filter(GetName(), exactNameFilter)
-                : symbolTable;
+                ? _symbolTable.Filter(GetName(), exactNameFilter)
+                : _symbolTable;
         }
 
         public override TreeTextRange GetTreeTextRange()
         {
-
-            // return GetTreeNode().GetTreeTextRange();
             TreeOffset treeStartOffset = myOwner.GetTreeStartOffset() + 1;
             var end = treeStartOffset + ((string) myOwner.ConstantValue.Value)!.Length;
 
             return new TreeTextRange(treeStartOffset, end);
-            // var range = myOwner.GetTreeTextRange();
-
-            // return range.SetStartTo(range.StartOffset + 1).SetEndTo(range.EndOffset - 1);
         }
 
         public override IReference BindTo(IDeclaredElement element)

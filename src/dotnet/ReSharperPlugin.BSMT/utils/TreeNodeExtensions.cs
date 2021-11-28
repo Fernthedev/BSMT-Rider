@@ -22,6 +22,18 @@ namespace ReSharperPlugin.BSMT_Rider.utils
 
             return default;
         }
+        
+        public static IEnumerable<T> GetChildrenInSubtreesUnrecursive<T>(this ITreeNode node) where T : class, ITreeNode
+        {
+            if (node.FirstChild == null) yield break;
+            
+            ITreeNode? child;
+            for (child = node.FirstChild; child != null; child = child.NextSibling)
+            {
+                if (child is T obj4)
+                    yield return obj4;
+            }
+        }
 
         public static List<T> GetTypeInFile<T>(this ICSharpFile file, IEnumerable<ITreeNode>? nodes = null, List<T>? list = null) where T : class
         {

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Metadata.Reader.Impl;
@@ -7,6 +8,14 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
     public class BSMLConstants
     {
         public const string BsmlAttributesNamespace = "BeatSaberMarkupLanguage.Attributes";
+        public const string BsmlVarPrefix = "~";
+
+        public static string StripPrefix(string str)
+        {
+            var containsPrefix = str.StartsWith(BsmlVarPrefix, StringComparison.OrdinalIgnoreCase);
+
+            return !containsPrefix ? str : str[BsmlVarPrefix.Length..];
+        }
 
         public static readonly ClrTypeName BsmlViewDefinitionAttribute =
             new($"{BsmlAttributesNamespace}.ViewDefinitionAttribute");
@@ -16,7 +25,8 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
         public static readonly List<ClrTypeName> SourceToBsmlAttributes =
             new List<string>
             {
-                "UIComponent"
+                "UIComponent",
+                "UIObject"
             }.Select(s => new ClrTypeName($"{BsmlAttributesNamespace}.{s}")).ToList();
 
         public static readonly List<ClrTypeName> BsmlToSourceAttributes =

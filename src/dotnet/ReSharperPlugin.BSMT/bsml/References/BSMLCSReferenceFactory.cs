@@ -22,14 +22,19 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
     {
         private readonly ICSharpFile _cSharpFile;
         private readonly Dictionary<ITypeDeclaration, IXmlFile> _typesToBsml = new();
-        private readonly BSMLFileManager _bsmlFileManager;
+        private readonly BsmlFileManager _bsmlFileManager;
+        private readonly BsmlReferenceProviderFactory _bsmlReferenceProviderFactory;
+
+        private readonly Dictionary<IAttribute, string> _attributeToNameMap = new();
+
 
         private readonly SemaphoreSlim _slim = new(1, 1);
 
-        public BSMLCSReferenceFactory(ICSharpFile cSharpFile, BSMLFileManager bsmlFileManager)
+        public BSMLCSReferenceFactory(ICSharpFile cSharpFile, BsmlFileManager bsmlFileManager, BsmlReferenceProviderFactory bsmlReferenceProviderFactory)
         {
             _cSharpFile = cSharpFile;
             _bsmlFileManager = bsmlFileManager;
+            _bsmlReferenceProviderFactory = bsmlReferenceProviderFactory;
         }
 
         private async Task UpdateReferencesAsync()
@@ -88,18 +93,81 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
             if (sourceFile is null)
                 return;
 
-            var elementToMap = _bsmlFileManager.GetAssociatedBSMLFile(_cSharpFile);
+            var elementToMap = _bsmlFileManager.GetAssociatedBsmlFiles(_cSharpFile);
+            
+            // get BSML annotations
 
+            // var attributes = _cSharpFile.GetTypeInFile<IAttribute>();
+            // var definedValues = attributes
+            //     .Where((attribute, _) =>
+            //     {
+            //         if (attribute is null || !attribute.IsValid())
+            //         {
+            //             return false;
+            //         }
+            //
+            //         if (attribute.Name.Reference.Resolve().DeclaredElement is not IClass attributeClass)
+            //             return false;
+            //
+            //         return IsClrTypeBsmlToSource(attributeClass.GetClrName()) ||
+            //                IsClrTypeSourceToBsml(attributeClass.GetClrName());
+            //     })
+            //     .ToDictionary(attribute => attribute, attribute => attribute.ConstructorArgumentExpressionsEnumerable.SingleItem!.ConstantValue.Value as string);
+            //
+            
+            // _attributeToNameMap.Clear();
+            // foreach (var (attribute, name) in definedValues)
+            // {
+            //     if (name is not null)
+            //     {
+            //         _attributeToNameMap[attribute] = name;
+            //     }
+            // }
+
+            _attributeToNameMap.Clear();
             _typesToBsml.Clear();
             foreach (var (key, value) in elementToMap)
             {
-                if (value is not null)
-                {
-                    _typesToBsml[key] = value;
-                }
+                if (value is null) continue;
+                
+                _typesToBsml[key] = value;
+                    
+                // Find XML file references
+                var factory = _bsmlReferenceProviderFactory.GetXmlReferenceFactory(value);
+
+                if (factory is null) continue;
+
+
+                var attributes = value.GetChildrenInSubtreesUnrecursive<IAttribute>();
+
+
+                ParseAttributes(attributes);
             }
 
             _slim.Release();
+        }
+
+        private void ParseAttributes(IEnumerable<IAttribute> attributes)
+        {
+            foreach (var attribute in attributes
+                .Where(attribute =>
+                {
+                    if (attribute.Name.Reference.Resolve().DeclaredElement is not IClass attributeClass)
+                        return false;
+
+                    return IsClrTypeBsmlToSource(attributeClass.GetClrName()) ||
+                           IsClrTypeSourceToBsml(attributeClass.GetClrName());
+                }))
+            {
+
+                var value = attribute.ConstructorArgumentExpressionsEnumerable.SingleItem!.ConstantValue
+                    .Value as string;
+
+                if (value is null)
+                    continue;
+
+                _attributeToNameMap[attribute] = value;
+            }
         }
 
 
@@ -124,6 +192,7 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
 
             var doUpdateReferences =
                 Equals(attributeClassClrName, BSMLConstants.BsmlViewDefinitionAttribute) ||
+                IsClrTypeBsmlToSource(attributeClassClrName) ||
                 IsClrTypeSourceToBsml(attributeClassClrName);
 
             if (!doUpdateReferences)
@@ -144,48 +213,76 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
             {
                 newReferences = SourceToBsmlTagReference(literal, bsmlFile);
             }
+            else if (IsClrTypeBsmlToSource(attributeClassClrName))
+            {
+                newReferences = BsmlToSourceTagReference(literal, bsmlFile);
+            }
             else if (Equals(attributeClassClrName, BSMLConstants.BsmlViewDefinitionAttribute))
             {
-                newReferences = SourceToBsmlFileReference(literal, bsmlFile);
+                newReferences = ClassToBsmlFileReference(literal, bsmlFile);
             }
 
             return ResolveUtil.ReferenceSetsAreEqual(newReferences, oldReferences) ? oldReferences : newReferences;
         }
 
-        private ReferenceCollection SourceToBsmlTagReference(ILiteralExpression literal, IXmlFile _bsmlFile)
+        private ReferenceCollection BsmlToSourceTagReference(ILiteralExpression attributeLiteral, IXmlFile bsmlFile)
         {
-            var tagPredicate = new Func<IXmlAttribute, bool>(attribute => attribute.AttributeName == "id");
+            var attributeToCsVariable = _bsmlFileManager.ParseBsml(bsmlFile)!.GetAttributeToNameMap();
 
-            List<Tuple<IXmlTag, string>> identifiedTags = _bsmlFile.GetChildrenInSubtrees()
-                .SafeOfType<IXmlTag>()
-                .Select(tag => new Tuple<IXmlTag, string?>(tag, tag.GetAttributes().FirstOrDefault(tagPredicate)?.UnquotedValue))
-                .Where(tuple => tuple.Item2 is not null)
-                .ToList()!;
+            var tagDictionary =
+                attributeToCsVariable
+                    .Where(pair => attributeLiteral.ConstantValue.Value as string == BSMLConstants.StripPrefix(pair.Value))
+                    .Select(pair => new Tuple<IXmlTag, string>(pair.Key.GetParentOfType<IXmlTag>(), BSMLConstants.StripPrefix(pair.Value)))
+                    .ToList();
 
-            if (identifiedTags.IsEmpty())
+            if (tagDictionary.IsEmpty())
                 return ReferenceCollection.Empty;
 
             return new ReferenceCollection(
-                new SourceToBsmlTagReference(literal, identifiedTags, _bsmlFile.GetPsiServices(), _bsmlFile.GetSourceFile()!.Name)
+                tagDictionary.Select(tuple => new SourceToBsmlTagReference(attributeLiteral, tuple)).ToArray<IReference>()
+            );
+        }
+        
+        private ReferenceCollection SourceToBsmlTagReference(ILiteralExpression literal, IXmlFile bsmlFile)
+        {
+            var identifiedTags = _bsmlFileManager.ParseBsml(bsmlFile)!.GetIdentifiedTags();
+            
+            // if (identifiedTags.IsEmpty())
+            //     return ReferenceCollection.Empty;
+
+            var identifiedTagsTuple = identifiedTags.Select(pair => new Tuple<IXmlTag, string>(pair.Value, pair.Key));
+
+
+            return new ReferenceCollection(
+                identifiedTagsTuple.Select(tuple => new SourceToBsmlTagReference(literal, tuple)).ToArray<IReference>()
+                // new SourceToBsmlTagReference(literal, identifiedTagsTuple)
             );
         }
 
-        private static ReferenceCollection SourceToBsmlFileReference(ILiteralExpression literal, IXmlFile _bsmlFile)
+        private static ReferenceCollection ClassToBsmlFileReference(ILiteralExpression literal, IXmlFile bsmlFile)
         {
             var attributeValue = literal.ConstantValue.Value as string;
 
-            var xmlTag = _bsmlFile.GetTag(tag => tag is not null);
+            var xmlTag = bsmlFile.GetTag(tag => tag is not null);
+            
+            if (xmlTag is null)
+                return ReferenceCollection.Empty;
 
-            var tuple = new Tuple<IXmlTag, string>(xmlTag, attributeValue);
+            var tuple = new Tuple<IXmlTag, string>(xmlTag, attributeValue!);
 
             return new ReferenceCollection(
-                new SourceToBsmlTagReference(literal, tuple, _bsmlFile.GetPsiServices(), _bsmlFile.GetSourceFile()!.Name)
+                new SourceToBsmlTagReference(literal, tuple)
             );
         }
 
         private static bool IsClrTypeSourceToBsml(IClrTypeName other)
         {
             return BSMLConstants.SourceToBsmlAttributes.Any(a => Equals(a, other));
+        }
+        
+        private static bool IsClrTypeBsmlToSource(IClrTypeName other)
+        {
+            return BSMLConstants.BsmlToSourceAttributes.Any(a => Equals(a, other));
         }
 
         public bool HasReference(ITreeNode element, IReferenceNameContainer names)
