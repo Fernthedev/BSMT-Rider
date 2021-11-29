@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Metadata.Reader.API;
 using JetBrains.Metadata.Reader.Impl;
 
 namespace ReSharperPlugin.BSMT_Rider.bsml
@@ -35,5 +36,15 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
                 "UIValue",
                 "UIAction"
             }.Select(s => new ClrTypeName($"{BsmlAttributesNamespace}.{s}")).ToList();
+
+        public static bool IsClrTypeSourceToBsml(IClrTypeName other)
+        {
+            return SourceToBsmlAttributes.Any(a => Equals(a, other));
+        }
+
+        public static bool IsClrTypeBsmlToSource(IClrTypeName other)
+        {
+            return BsmlToSourceAttributes.Any(a => Equals(a, other));
+        }
     }
 }

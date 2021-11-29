@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using JetBrains.Collections;
-using JetBrains.Metadata.Reader.API;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.ExtensionsAPI.Resolve;
@@ -21,14 +18,10 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
     public class BSMLCSReferenceFactory : IReferenceFactory
     {
         private readonly ICSharpFile _cSharpFile;
-        private readonly Dictionary<ITypeDeclaration, IXmlFile> _typesToBsml = new();
+        private readonly Dictionary<ITypeDeclaration, BsmlClassData> _typesToBsml = new();
         private readonly BsmlFileManager _bsmlFileManager;
         private readonly BsmlReferenceProviderFactory _bsmlReferenceProviderFactory;
-
-        private readonly Dictionary<IAttribute, string> _attributeToNameMap = new();
-
-
-        private readonly SemaphoreSlim _slim = new(1, 1);
+        
 
         public BSMLCSReferenceFactory(ICSharpFile cSharpFile, BsmlFileManager bsmlFileManager, BsmlReferenceProviderFactory bsmlReferenceProviderFactory)
         {
@@ -37,52 +30,13 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
             _bsmlReferenceProviderFactory = bsmlReferenceProviderFactory;
         }
 
-        private async Task UpdateReferencesAsync()
-        {
-            // Do not update again unnecessarily, just wait for the first thread to finish
-            if (!await _slim.WaitAsync(0))
-            {
-                if (await _slim.WaitAsync(7000))
-                {
-                    _slim.Release();
-                }
-                else
-                {
-                    Console.WriteLine("h");
-                }
 
-                return;
-            }
-
-            await _slim.WaitAsync();
-
-            UpdateReferencesInternal();
-        }
-
-        private void UpdateReferences()
-        {
-            // Do not update again unnecessarily, just wait for the first thread to finish
-            if (!_slim.Wait(0))
-            {
-                if (_slim.Wait(7000))
-                {
-                    _slim.Release();
-                }
-                else
-                {
-                    Console.WriteLine("h");
-                }
-                return;
-            }
-
-            UpdateReferencesInternal();
-        }
 
         /// <summary>
         /// Reads the class' [ViewDefinition("assemblyName")] attribute, then finds the XML file and
         /// associates the attribute's attached class to the file
         /// </summary>
-        private void UpdateReferencesInternal()
+        private void UpdateReferences()
         {
             var project = _cSharpFile.GetProject();
             if (project is null)
@@ -95,80 +49,16 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
 
             var elementToMap = _bsmlFileManager.GetAssociatedBsmlFiles(_cSharpFile);
             
-            // get BSML annotations
-
-            // var attributes = _cSharpFile.GetTypeInFile<IAttribute>();
-            // var definedValues = attributes
-            //     .Where((attribute, _) =>
-            //     {
-            //         if (attribute is null || !attribute.IsValid())
-            //         {
-            //             return false;
-            //         }
-            //
-            //         if (attribute.Name.Reference.Resolve().DeclaredElement is not IClass attributeClass)
-            //             return false;
-            //
-            //         return IsClrTypeBsmlToSource(attributeClass.GetClrName()) ||
-            //                IsClrTypeSourceToBsml(attributeClass.GetClrName());
-            //     })
-            //     .ToDictionary(attribute => attribute, attribute => attribute.ConstructorArgumentExpressionsEnumerable.SingleItem!.ConstantValue.Value as string);
-            //
-            
-            // _attributeToNameMap.Clear();
-            // foreach (var (attribute, name) in definedValues)
-            // {
-            //     if (name is not null)
-            //     {
-            //         _attributeToNameMap[attribute] = name;
-            //     }
-            // }
-
-            _attributeToNameMap.Clear();
             _typesToBsml.Clear();
             foreach (var (key, value) in elementToMap)
             {
                 if (value is null) continue;
                 
                 _typesToBsml[key] = value;
-                    
-                // Find XML file references
-                var factory = _bsmlReferenceProviderFactory.GetXmlReferenceFactory(value);
-
-                if (factory is null) continue;
-
-
-                var attributes = value.GetChildrenInSubtreesUnrecursive<IAttribute>();
-
-
-                ParseAttributes(attributes);
-            }
-
-            _slim.Release();
-        }
-
-        private void ParseAttributes(IEnumerable<IAttribute> attributes)
-        {
-            foreach (var attribute in attributes
-                .Where(attribute =>
-                {
-                    if (attribute.Name.Reference.Resolve().DeclaredElement is not IClass attributeClass)
-                        return false;
-
-                    return IsClrTypeBsmlToSource(attributeClass.GetClrName()) ||
-                           IsClrTypeSourceToBsml(attributeClass.GetClrName());
-                }))
-            {
-
-                var value = attribute.ConstructorArgumentExpressionsEnumerable.SingleItem!.ConstantValue
-                    .Value as string;
-
-                if (value is null)
-                    continue;
-
-                _attributeToNameMap[attribute] = value;
             }
         }
+
+
 
 
         public ReferenceCollection GetReferences(ITreeNode element, ReferenceCollection oldReferences)
@@ -191,9 +81,9 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
             var attributeClassClrName = attributeClass.GetClrName();
 
             var doUpdateReferences =
-                Equals(attributeClassClrName, BSMLConstants.BsmlViewDefinitionAttribute) ||
-                IsClrTypeBsmlToSource(attributeClassClrName) ||
-                IsClrTypeSourceToBsml(attributeClassClrName);
+                Equals(attributeClassClrName, BSMLConstants.BsmlViewDefinitionAttribute) || 
+                BSMLConstants.IsClrTypeBsmlToSource(attributeClassClrName) ||
+                BSMLConstants.IsClrTypeSourceToBsml(attributeClassClrName);
 
             if (!doUpdateReferences)
             {
@@ -204,22 +94,22 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
 
             if (_typesToBsml.IsEmpty() || !_typesToBsml.TryGetValue(clrType, out var bsmlFile))
             {
-                return ReferenceCollection.Empty;
+                return new ReferenceCollection();
             }
 
             var newReferences = ReferenceCollection.Empty;
 
-            if (IsClrTypeSourceToBsml(attributeClassClrName))
+            if (BSMLConstants.IsClrTypeSourceToBsml(attributeClassClrName))
             {
-                newReferences = SourceToBsmlTagReference(literal, bsmlFile);
+                newReferences = SourceToBsmlTagReference(literal, bsmlFile.AssociatedBsmlFile!);
             }
-            else if (IsClrTypeBsmlToSource(attributeClassClrName))
+            else if (BSMLConstants.IsClrTypeBsmlToSource(attributeClassClrName))
             {
-                newReferences = BsmlToSourceTagReference(literal, bsmlFile);
+                newReferences = BsmlToSourceTagReference(literal, bsmlFile.AssociatedBsmlFile!);
             }
             else if (Equals(attributeClassClrName, BSMLConstants.BsmlViewDefinitionAttribute))
             {
-                newReferences = ClassToBsmlFileReference(literal, bsmlFile);
+                newReferences = ClassToBsmlFileReference(literal, bsmlFile.AssociatedBsmlFile!);
             }
 
             return ResolveUtil.ReferenceSetsAreEqual(newReferences, oldReferences) ? oldReferences : newReferences;
@@ -246,16 +136,10 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
         private ReferenceCollection SourceToBsmlTagReference(ILiteralExpression literal, IXmlFile bsmlFile)
         {
             var identifiedTags = _bsmlFileManager.ParseBsml(bsmlFile)!.GetIdentifiedTags();
-            
-            // if (identifiedTags.IsEmpty())
-            //     return ReferenceCollection.Empty;
-
-            var identifiedTagsTuple = identifiedTags.Select(pair => new Tuple<IXmlTag, string>(pair.Value, pair.Key));
 
 
             return new ReferenceCollection(
-                identifiedTagsTuple.Select(tuple => new SourceToBsmlTagReference(literal, tuple)).ToArray<IReference>()
-                // new SourceToBsmlTagReference(literal, identifiedTagsTuple)
+                identifiedTags.Select(tuple => new SourceToBsmlTagReference(literal, tuple)).ToArray<IReference>()
             );
         }
 
@@ -268,21 +152,9 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
             if (xmlTag is null)
                 return ReferenceCollection.Empty;
 
-            var tuple = new Tuple<IXmlTag, string>(xmlTag, attributeValue!);
-
             return new ReferenceCollection(
-                new SourceToBsmlTagReference(literal, tuple)
+                new SourceToBsmlTagReference(literal, attributeValue!, xmlTag)
             );
-        }
-
-        private static bool IsClrTypeSourceToBsml(IClrTypeName other)
-        {
-            return BSMLConstants.SourceToBsmlAttributes.Any(a => Equals(a, other));
-        }
-        
-        private static bool IsClrTypeBsmlToSource(IClrTypeName other)
-        {
-            return BSMLConstants.BsmlToSourceAttributes.Any(a => Equals(a, other));
         }
 
         public bool HasReference(ITreeNode element, IReferenceNameContainer names)

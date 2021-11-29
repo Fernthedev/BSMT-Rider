@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Collections;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.ExtensionsAPI.Resolve;
 using JetBrains.ReSharper.Psi.Modules;
@@ -28,10 +29,43 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
             List<IDeclaredElement> elements = new(tags1.Select(tag => new BSMLTagElement(tag.Item1, tag.Item2)).ToList());
             _symbolTable = ResolveUtil.CreateSymbolTable(elements, 0);
         }
+        
+        public SourceToBsmlTagReference(ILiteralExpression owner, IReadOnlyDictionary<IXmlTag, string> tags) : base(owner)
+        {
+            List<IDeclaredElement> elements = new(tags.Select(tag => new BSMLTagElement(tag.Key, tag.Value)).ToList());
+            _symbolTable = ResolveUtil.CreateSymbolTable(elements, 0);
+        }
 
-        public SourceToBsmlTagReference(ILiteralExpression owner, Tuple<IXmlTag, string> tags) : this(owner,
-            new List<Tuple<IXmlTag, string>> { tags })
-        {}
+        public SourceToBsmlTagReference(ILiteralExpression owner, Tuple<IXmlTag, string> tag) : base(owner)
+        {
+            var (item1, item2) = tag;
+            _symbolTable = ResolveUtil.CreateSingletonSymbolTable(new BSMLTagElement(item1, item2), EmptySubstitution.INSTANCE);
+        }
+
+        public SourceToBsmlTagReference(ILiteralExpression owner, KeyValuePair<IXmlTag, string> tag) : base(owner)
+        {
+            var (key, value) = tag;
+            _symbolTable = ResolveUtil.CreateSingletonSymbolTable(new BSMLTagElement(key, value), EmptySubstitution.INSTANCE);
+        }
+        
+        public SourceToBsmlTagReference(ILiteralExpression owner, Tuple<string, IXmlTag> tag) : base(owner)
+        {
+            var (item1, item2) = tag;
+            _symbolTable = ResolveUtil.CreateSingletonSymbolTable(new BSMLTagElement(item2, item1), EmptySubstitution.INSTANCE);
+        }
+        
+        public SourceToBsmlTagReference(ILiteralExpression owner, string name, IXmlTag tag) : base(owner)
+        {
+            _symbolTable = ResolveUtil.CreateSingletonSymbolTable(new BSMLTagElement(tag, name), EmptySubstitution.INSTANCE);
+        }
+
+        public SourceToBsmlTagReference(ILiteralExpression owner, KeyValuePair<string, IXmlTag> tag) : base(owner)
+        {
+            var (key, value) = tag;
+            _symbolTable = ResolveUtil.CreateSingletonSymbolTable(new BSMLTagElement(value, key), EmptySubstitution.INSTANCE);
+        }
+        
+        
 
         public override ResolveResultWithInfo ResolveWithoutCache()
         {
