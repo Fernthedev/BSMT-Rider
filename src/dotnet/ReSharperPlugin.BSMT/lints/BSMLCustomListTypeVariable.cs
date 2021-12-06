@@ -1,9 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Collections;
+using JetBrains.DocumentModel;
 using JetBrains.Metadata.Reader.API;
+using JetBrains.Metadata.Reader.Impl;
 using JetBrains.ReSharper.Feature.Services.Daemon;
 using JetBrains.ReSharper.Psi;
+using JetBrains.ReSharper.Psi.CSharp;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Modules;
 using JetBrains.ReSharper.Psi.Tree;
@@ -14,31 +18,22 @@ using ReSharperPlugin.BSMT_Rider.utils;
 
 namespace ReSharperPlugin.BSMT_Rider.lints
 {
-    
+
     // Types mentioned in this attribute are used for performance optimizations
     [ElementProblemAnalyzer(
         typeof (IFieldDeclaration), typeof(IPropertyDeclaration),
         HighlightingTypes = new [] {typeof (BsmlListWrongTypeHighlighting)})]
-    public class BsmlProblemAnalyzer : ElementProblemAnalyzer<ICSharpDeclaration>
+    public class BsmlCustomListTypeProblemAnalyzer : ElementProblemAnalyzer<ICSharpDeclaration>
     {
         private readonly BsmlFileManager _bsmlFileManager;
-        private List<IDeclaredType>? _allowedListTypes;
 
-        public BsmlProblemAnalyzer(BsmlFileManager bsmlFileManager, IPsiModule psiModule)
+        public BsmlCustomListTypeProblemAnalyzer(BsmlFileManager bsmlFileManager)
         {
             _bsmlFileManager = bsmlFileManager;
-            
         }
 
         protected override void Run(ICSharpDeclaration element, ElementProblemAnalyzerData data, IHighlightingConsumer consumer)
         {
-            _allowedListTypes ??= BsmlListWrongTypeHighlighting.AllowedListClrTypes
-                .Select(t =>
-                    TypeFactory.CreateTypeByCLRName(t, NullableAnnotation.Unknown, element.GetSourceFile()!.PsiModule))
-                .ToList();
-            
-            
-            // TODO: Move to BSMLList
             var attributes = element.GetChildrenInSubtrees<IAttribute>();
 
             var uiValueAttribute = attributes
@@ -81,8 +76,62 @@ namespace ReSharperPlugin.BSMT_Rider.lints
             
             if (addHighlight)
             {
-                consumer.AddHighlighting(new BsmlListWrongTypeHighlighting(element, _bsmlFileManager, (ILiteralExpression) uiValueId));
+                consumer.AddHighlighting(new BsmlListWrongTypeHighlighting(element));
             }
         }
+    }
+    
+    
+    [RegisterConfigurableSeverity(
+        BsmlListWrongTypeHighlighting.SeverityId,
+        CompoundItemName: null,
+        Group: HighlightingGroupIds.CodeSmell,
+        Title: BsmlListWrongTypeHighlighting.Message,
+        Description: BsmlListWrongTypeHighlighting.Description,
+        DefaultSeverity: Severity.WARNING)]
+    [ConfigurableSeverityHighlighting(
+        SeverityId,
+        CSharpLanguage.Name,
+        OverlapResolve = OverlapResolveKind.ERROR,
+        OverloadResolvePriority = 0,
+        ToolTipFormatString = Message)]
+    public class BsmlListWrongTypeHighlighting : IHighlighting
+    {
+        public const string SeverityId = "BSMT-Rider/BSML"; // Appears in suppression comments
+        public const string Message = "BSML refers to this field as UIValue for a custom-list. Consider using one of these list types instead: {List<object>}";
+        public const string Description = "Wrong list type for custom-list tag.";
+        
+        // https://github.com/monkeymanboy/BeatSaberMarkupLanguage/blob/cb533a1955d39bba50049e18c546dc28601698ea/BeatSaberMarkupLanguage/TypeHandlers/CustomCellListTableDataHandler.cs#L76
+        public static readonly List<Type> AllowedListTypes =
+            new()
+            {
+                typeof(List<object>)
+            };
+
+        public static readonly List<ClrTypeName> AllowedListClrTypes =
+            AllowedListTypes.Select(s => new ClrTypeName(s.FullName!)).ToList();
+
+        
+        
+        public BsmlListWrongTypeHighlighting(ICSharpDeclaration declaration)
+        {
+            Declaration = declaration;
+        }
+
+        public ICSharpDeclaration Declaration { get; }
+
+        public bool IsValid()
+        {
+            return Declaration.IsValid();
+        }
+
+        public DocumentRange CalculateRange()
+        {
+            return Declaration.NameIdentifier?.GetHighlightingRange() ?? DocumentRange.InvalidRange;
+        }
+
+        public string ToolTip => Message;
+        
+        public string ErrorStripeToolTip => $"BSML refers to '{Declaration.DeclaredName}' as UIValue for a custom-list. Consider using one of these list types instead: {{List<object>}}";
     }
 }
