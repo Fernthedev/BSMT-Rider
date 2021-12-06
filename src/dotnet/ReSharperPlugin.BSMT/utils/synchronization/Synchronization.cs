@@ -51,13 +51,20 @@ namespace ReSharperPlugin.BSMT_Rider.utils
 		/// <param name="ss">the slim semaphore to acquire</param>
 		/// <param name="locked">true if semaphore locked properly</param>
 		/// <returns>the locker to use with <see langword="using"/></returns>
-		public static IDisposable Lock(SemaphoreSlim ss, out bool locked)
+		public static IDisposable Lock(SemaphoreSlim ss, out bool locked, int? timeout = null)
 		{
 			locked = true;
 			if (!ss.Wait(0))
 			{
 				locked = false;
-				ss.Wait();
+				if (timeout is null)
+				{
+					ss.Wait();
+				}
+				else
+				{
+					ss.Wait((int) timeout);
+				}
 			}
 
 			return WeakActionToken.Create(ss, locker => locker.Release());

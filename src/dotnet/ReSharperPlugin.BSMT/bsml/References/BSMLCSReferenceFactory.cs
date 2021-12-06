@@ -9,7 +9,6 @@ using JetBrains.ReSharper.Psi.Resolve;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.ReSharper.Psi.Util;
 using JetBrains.ReSharper.Psi.Xml.Tree;
-using JetBrains.RiderTutorials.Utils;
 using JetBrains.Util;
 using ReSharperPlugin.BSMT_Rider.utils;
 
@@ -121,8 +120,8 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
 
             var tagDictionary =
                 attributeToCsVariable
-                    .Where(pair => attributeLiteral.ConstantValue.Value as string == BSMLConstants.StripPrefix(pair.Value))
-                    .Select(pair => new Tuple<IXmlTag, string>(pair.Key.GetParentOfType<IXmlTag>(), BSMLConstants.StripPrefix(pair.Value)))
+                    .Where(pair => attributeLiteral.ConstantValue.Value as string == BSMLConstants.StripGarbage(pair.Value))
+                    .Select(pair => new Tuple<IXmlTag?, string>(pair.Key.GetParentOfType<IXmlTag>(), BSMLConstants.StripGarbage(pair.Value)))
                     .ToList();
 
             if (tagDictionary.IsEmpty())

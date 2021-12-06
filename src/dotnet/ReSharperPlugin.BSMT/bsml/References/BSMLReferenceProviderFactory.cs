@@ -22,12 +22,13 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
         private readonly Dictionary<ICSharpFile, BSMLCSReferenceFactory> _referenceCsFactories = new();
         private readonly Dictionary<IXmlFile, BsmlXmlReferenceFactory> _referenceXmlFactories = new();
 
-        private readonly BsmlFileManager _bsmlFileManager = new();
+        private readonly BsmlFileManager _bsmlFileManager;
 
-        public BsmlReferenceProviderFactory(Lifetime lifetime, ILogger logger)
+        public BsmlReferenceProviderFactory(Lifetime lifetime, ILogger logger, BsmlFileManager bsmlFileManager)
         {
             Changed = new Signal<IReferenceProviderFactory>(lifetime, GetType().FullName!);
             _logger = logger;
+            _bsmlFileManager = bsmlFileManager;
         }
 
 

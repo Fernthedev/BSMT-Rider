@@ -12,7 +12,6 @@ using JetBrains.ReSharper.Psi.Files;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.ReSharper.Psi.Xml;
 using JetBrains.ReSharper.Psi.Xml.Tree;
-using JetBrains.RiderTutorials.Utils;
 using JetBrains.Util;
 using JetBrains.Util.Dotnet.TargetFrameworkIds;
 using ReSharperPlugin.BSMT_Rider.utils;
@@ -67,6 +66,7 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
         }
     }
     
+    [SolutionComponent]
     public class BsmlFileManager
     {
         private readonly Dictionary<VirtualFileSystemPath, IXmlFile?> _xmlFiles = new();
@@ -168,7 +168,7 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
             if (attributes.IsEmpty())
                 return new Dictionary<ITypeDeclaration, BsmlClassData>();
 
-            Dictionary<ITypeDeclaration, BsmlClassData> FindCache()
+            Dictionary<ITypeDeclaration, BsmlClassData> FindCache(bool parseType)
             {
 
                 Dictionary<ITypeDeclaration, BsmlClassData> map = new();
@@ -176,9 +176,22 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
                 foreach (var parentClazz in attributes.Select(attribute =>
                     attribute.GetParentOfTypeRecursiveNotStupid<ITypeDeclaration>()!))
                 {
-                    if (_classToBsml.TryGetValue(parentClazz, out var bsmlFile))
+                    if (parseType)
                     {
-                        map[parentClazz] = bsmlFile;
+                        var bsmlFile = GetAssociatedBsmlFile(parentClazz);
+
+                        if (bsmlFile is not null)
+                        {
+                            map[parentClazz] = bsmlFile;
+                        }
+                    }
+                    else
+                    {
+
+                        if (_classToBsml.TryGetValue(parentClazz, out var bsmlFile))
+                        {
+                            map[parentClazz] = bsmlFile;
+                        }
                     }
                 }
 
@@ -187,132 +200,268 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
 
             if (!HasBeenModified(sourceFile))
             {
-                return FindCache();
+                return FindCache(false);
             }
 
             using var locker = Synchronization.Lock(GetSemaphore(cSharpFile), out bool locked);
+
+            return FindCache(locked);
+
+            // Dictionary<IAttribute, string> definedViews = attributes
+            //     .Where((attribute, _) => attribute is not null && attribute.IsValid())
+            //     .Select((attribute, _) =>
+            //     {
+            //         try
+            //         {
+            //             return new TupleStruct<IAttribute, IDeclaredElement>(attribute,
+            //                 attribute.Name.Reference.Resolve().DeclaredElement);
+            //         }
+            //         catch (Exception)
+            //         {
+            //             return default;
+            //         }
+            //     })
+            //     // Get attribute's class
+            //     .Where(e => e.Item2 is IClass)
+            //     .Select(e => e.Cast<IAttribute, IClass>())
+            //
+            //     // Check if attribute is BSML view
+            //     .Where(attribute => attribute.Item2.GetClrName().Equals(BSMLConstants.BsmlViewDefinitionAttribute))
+            //
+            //     // Get path to view
+            //     .Select(attribute =>
+            //         new TupleStruct<IAttribute, string?>(attribute.Item1,
+            //             attribute.Item1.ConstructorArgumentExpressions.FirstOrDefault()?.ConstantValue.Value as string))
+            //
+            //     // Ensure is not null;
+            //     .Where(e => e.Item2 is not null)
+            //     .ToDictionary(e => e.Item1, e => e.Item2!);
+            //
+            // // Class:path_to_view_file
+            // Dictionary<ITypeDeclaration, VirtualFileSystemPath> mappedViews = new();
+            //
+            // // Add attribute views
+            // foreach (var (attribute, path) in definedViews)
+            // {
+            //     try
+            //     {
+            //         var assembly = ParseBsmlAssemblyPath(project, path);
+            //
+            //         mappedViews[attribute.GetParentOfTypeRecursiveNotStupid<ITypeDeclaration>()!] =
+            //             assembly; //.EvaluateFileSystemPath();
+            //     }
+            //     catch (Exception)
+            //     {
+            //         // ignored
+            //     }
+            // }
+            //
+            //
+            // // Add Implicit view
+            // try
+            // {
+            //     var bsmlLocalPath = VirtualFileSystemPath.ParseRelativelyTo(
+            //         Path.ChangeExtension(sourceFile.Name, "bsml"),
+            //         sourceFile.GetLocation().Parent);
+            //
+            //
+            //     foreach (var e in
+            //         cSharpFile.GetTypeInFile<ITypeDeclaration>().ToList()
+            //             .Where(type =>
+            //                 type.DeclaredElement != null &&
+            //                 !mappedViews.ContainsKey(type) &&
+            //                 type.SuperTypes.Any(e => e.GetClrName().Equals(BSMLConstants.BsmlViewControllerParent))
+            //             ))
+            //     {
+            //         mappedViews[e!] = bsmlLocalPath;
+            //     }
+            // }
+            // catch (Exception)
+            // {
+            //     // ignored
+            // }
+            //
+            // Dictionary<ITypeDeclaration, BsmlClassData> elementToMap = new();
+            //
+            // foreach (var (element, path) in mappedViews)
+            // {
+            //     if (!_xmlFiles.TryGetValue(path, out var xmlFile))
+            //     {
+            //         var psiSourceFiles = project.GetPsiSourceFilesInProject(path);
+            //
+            //         var psiSourceFile = psiSourceFiles.FirstOrDefault(file =>
+            //             file is not null && file.PrimaryPsiLanguage is not UnknownLanguage);
+            //
+            //         if (psiSourceFile is not null)
+            //         {
+            //             xmlFile = psiSourceFile.GetPsiFiles<XmlLanguage>().SafeOfType<IXmlFile>().SingleOrDefault();
+            //         }
+            //     }
+            //     else
+            //     {
+            //         if (xmlFile is not null && !xmlFile.GetSourceFile()!.IsValid())
+            //         {
+            //             xmlFile = null;
+            //         }
+            //     }
+            //
+            //     if (xmlFile is null)
+            //     {
+            //         _xmlFiles[path] = null;
+            //     }
+            //     else
+            //     {
+            //         elementToMap[element] = ParseClass(element, xmlFile);
+            //     }
+            // }
+            //
+            // foreach (var (clazz, bsmlClassData) in elementToMap)
+            // {
+            //     _classToBsml[clazz] = bsmlClassData;
+            // }
+            //
+            // MarkModification(sourceFile);
+            //
+            // return elementToMap;
+        }
+        
+        public BsmlClassData? GetAssociatedBsmlFile(ITypeDeclaration typeDeclaration, int? timeout = null)
+        {
+            var sourceFile = typeDeclaration.GetSourceFile()!;
+            // var cSharpFile = (ICSharpFile) sourceFile.GetTheOnlyPsiFile(CSharpLanguage.Instance)!;
+            var project = sourceFile.GetProject()!;
+
+
+            var attributes = typeDeclaration.GetChildrenInSubtrees<IAttribute>().ToList();
+
+            if (attributes.IsEmpty())
+                return null;
+
+            BsmlClassData? FindCache()
+            {
+                return _classToBsml.TryGetValue(typeDeclaration, out var val) ? val : null;
+            }
+
+            if (!HasBeenModified(sourceFile))
+            {
+                return FindCache();
+            }
+
+            using var locker = Synchronization.Lock(GetSemaphore(typeDeclaration), out var locked, timeout);
 
             if (!locked)
             {
                 return FindCache();
             }
 
-            Dictionary<IAttribute, string> definedViews = attributes
-                .Where((attribute, _) => attribute is not null && attribute.IsValid())
-                .Select((attribute, _) =>
-                {
-                    try
-                    {
-                        return new TupleStruct<IAttribute, IDeclaredElement>(attribute,
-                            attribute.Name.Reference.Resolve().DeclaredElement);
-                    }
-                    catch (Exception)
-                    {
-                        return default;
-                    }
-                })
-                // Get attribute's class
-                .Where(e => e.Item2 is IClass)
-                .Select(e => e.Cast<IAttribute, IClass>())
+            string? definedView = null;
 
-                // Check if attribute is BSML view
-                .Where(attribute => attribute.Item2.GetClrName().Equals(BSMLConstants.BsmlViewDefinitionAttribute))
-
-                // Get path to view
-                .Select(attribute =>
-                    new TupleStruct<IAttribute, string?>(attribute.Item1,
-                        attribute.Item1.ConstructorArgumentExpressions.FirstOrDefault()?.ConstantValue.Value as string))
-
-                // Ensure is not null;
-                .Where(e => e.Item2 is not null)
-                .ToDictionary(e => e.Item1, e => e.Item2!);
-
-            // Class:path_to_view_file
-            Dictionary<ITypeDeclaration, VirtualFileSystemPath> mappedViews = new();
-
-            // Add attribute views
-            foreach (var (attribute, path) in definedViews)
+            foreach (var attribute in attributes.TakeWhile(_ => definedView is null))
             {
                 try
                 {
-                    var assembly = ParseBsmlAssemblyPath(project, path);
+                    var declaredElement = attribute.Name.Reference.Resolve().DeclaredElement;
 
-                    mappedViews[attribute.GetParentOfTypeRecursiveNotStupid<ITypeDeclaration>()!] =
-                        assembly; //.EvaluateFileSystemPath();
+                    if (declaredElement is not IClass clazz) continue;
+
+                    if (clazz.GetClrName().Equals(BSMLConstants.BsmlViewDefinitionAttribute))
+                    {
+                        definedView = attribute.ConstructorArgumentExpressions.FirstOrDefault()?.ConstantValue
+                            .Value as string;
+                    }
                 }
                 catch (Exception)
                 {
-                    // ignored
+
                 }
             }
 
+            // Class:path_to_view_file
+            VirtualFileSystemPath? bsmlFilePath = null;
 
-            // Add Implicit view
+
             try
             {
-                var bsmlLocalPath = VirtualFileSystemPath.ParseRelativelyTo(
-                    Path.ChangeExtension(sourceFile.Name, "bsml"),
-                    sourceFile.GetLocation().Parent);
-
-
-                foreach (var e in
-                    cSharpFile.GetTypeInFile<ITypeDeclaration>().ToList()
-                        .Where(type =>
-                            type.DeclaredElement != null &&
-                            !mappedViews.ContainsKey(type) &&
-                            type.SuperTypes.Any(e => e.GetClrName().Equals(BSMLConstants.BsmlViewControllerParent))
-                        ))
+                if (definedView is not null)
                 {
-                    mappedViews[e!] = bsmlLocalPath;
+
+                    var assembly = ParseBsmlAssemblyPath(project, definedView);
+
+                    bsmlFilePath = assembly;
+
                 }
+                else
+                {
+                    // Add Implicit view
+
+                    var bsmlLocalPath = VirtualFileSystemPath.ParseRelativelyTo(
+                        Path.ChangeExtension(sourceFile.Name, "bsml"),
+                        sourceFile.GetLocation().Parent);
+
+                    if (typeDeclaration.DeclaredElement is not null &&
+                        typeDeclaration.SuperTypes.Any(e =>
+                            e.GetClrName().Equals(BSMLConstants.BsmlViewControllerParent)))
+                    {
+                        bsmlFilePath = bsmlLocalPath;
+                    }
+
+                }
+
             }
             catch (Exception)
             {
                 // ignored
             }
 
-            Dictionary<ITypeDeclaration, BsmlClassData> elementToMap = new();
+            if (bsmlFilePath is null)
+                return null;
 
-            foreach (var (element, path) in mappedViews)
+
+            BsmlClassData? classData = null;
+
+
+            if (!_xmlFiles.TryGetValue(bsmlFilePath, out var xmlFile))
             {
-                if (!_xmlFiles.TryGetValue(path, out var xmlFile))
-                {
-                    var psiSourceFiles = project.GetPsiSourceFilesInProject(path);
+                var psiSourceFiles = project.GetPsiSourceFilesInProject(bsmlFilePath);
 
-                    var psiSourceFile = psiSourceFiles.FirstOrDefault(file =>
-                        file is not null && file.PrimaryPsiLanguage is not UnknownLanguage);
+                var psiSourceFile = psiSourceFiles.FirstOrDefault(file =>
+                    file is not null && file.PrimaryPsiLanguage is not UnknownLanguage);
 
-                    if (psiSourceFile is not null)
-                    {
-                        xmlFile = psiSourceFile.GetPsiFiles<XmlLanguage>().SafeOfType<IXmlFile>().SingleOrDefault();
-                    }
-                }
-                else
+                if (psiSourceFile is not null)
                 {
-                    if (xmlFile is not null && !xmlFile.GetSourceFile()!.IsValid())
-                    {
-                        xmlFile = null;
-                    }
+                    xmlFile = psiSourceFile.GetPsiFiles<XmlLanguage>().SafeOfType<IXmlFile>().SingleOrDefault();
                 }
-
-                if (xmlFile is null)
+            }
+            else
+            {
+                if (xmlFile is not null && !xmlFile.GetSourceFile()!.IsValid())
                 {
-                    _xmlFiles[path] = null;
-                }
-                else
-                {
-                    elementToMap[element] = ParseClass(element, xmlFile);
+                    xmlFile = null;
                 }
             }
 
-            foreach (var (clazz, bsmlClassData) in elementToMap)
+            if (xmlFile is null)
             {
-                _classToBsml[clazz] = bsmlClassData;
+                _xmlFiles[bsmlFilePath] = null;
+            }
+            else
+            {
+                classData = ParseClass(typeDeclaration, xmlFile);
+            }
+
+
+            if (classData is not null)
+            {
+                _classToBsml[typeDeclaration] = classData;
+            }
+            else
+            {
+                _classToBsml.TryRemove(typeDeclaration, out _);
             }
 
             MarkModification(sourceFile);
 
-            return elementToMap;
+            return classData;
         }
 
         public IEnumerable<ITypeDeclaration> FindClassesAssociatedToBsmlFile(IXmlFile xmlFile)
@@ -377,7 +526,7 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
             // Find all attributes with "~" prefix
             Dictionary<IXmlAttribute, string> attributeToCsVariable = tags
                 .SelectMany(tag => tag.GetAttributes().ToList())
-                .Where(attribute => attribute.UnquotedValue.StartsWith(BSMLConstants.BsmlVarPrefix))
+                // .Where(attribute => attribute.UnquotedValue.StartsWith(BSMLConstants.BsmlVarPrefix)) TODO: Why is it possible to accept anything? Man this will be damaging to performance
                 .ToDictionary(attribute => attribute, attribute => attribute.UnquotedValue);
             
 

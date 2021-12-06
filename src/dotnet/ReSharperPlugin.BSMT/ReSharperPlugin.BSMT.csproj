@@ -38,23 +38,7 @@
 
     <!-- TODO: add additional assemblies -->
   </ItemGroup>
-
-
-  <ItemGroup>
-    <EmbeddedResource Remove="Rider\**" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Compile Remove="Rider\**" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <None Remove="Rider\**" />
-  </ItemGroup>
-
-
+  
   <ItemGroup>
     <EmbeddedResource Remove="Rider\**" />
     <EmbeddedResource Remove="bin\**" />

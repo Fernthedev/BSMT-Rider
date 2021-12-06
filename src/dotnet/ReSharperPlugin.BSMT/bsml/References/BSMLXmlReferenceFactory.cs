@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Collections;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
@@ -8,6 +9,7 @@ using JetBrains.ReSharper.Psi.Resolve;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.ReSharper.Psi.Xml.Tree;
 using JetBrains.ReSharper.UnitTesting.Analysis.Xunit.References;
+using JetBrains.Util;
 using ReSharperPlugin.BSMT_Rider.utils;
 
 namespace ReSharperPlugin.BSMT_Rider.bsml
@@ -92,13 +94,27 @@ namespace ReSharperPlugin.BSMT_Rider.bsml
             {
                 var idValue = idAttribute.UnquotedValue;
                 var attributeTargets = _bsmlFileManager.ClassToBsml.Where(attributeClassPair =>
-                    attributeClassPair.Value.AssociatedBsmlFile == _xmlFile &&
-                    attributeClassPair.Value.GetAttributeToNameMap().Values.Contains(idValue));
+                        attributeClassPair.Value.AssociatedBsmlFile == _xmlFile &&
+                        attributeClassPair.Value.GetAttributeToNameMap().Values.Contains(idValue))
+                    .SelectMany(attributeClassPair => attributeClassPair.Value.GetAttributeToNameMap());
 
 
-                var references = attributeTargets.Select(attribute =>
-                    new PropertyDataReference(attribute.Key.DeclaredElement,
-                        attribute.Key.GetChildrenInSubtreesUnrecursive<ILiteralExpression>().FirstOrDefault()!));
+
+
+                List<IReference> references = new();
+
+                foreach (var (attribute, str) in attributeTargets)
+                {
+
+                    var fieldDecl = FieldDeclarationNavigator.GetByAttribute(attribute).FirstNotNull();
+
+                    if (fieldDecl is null) continue;
+                    
+                    var fieldVal = attribute.GetChildrenInSubtrees<ILiteralExpression>()
+                        .FirstOrDefault()!;
+
+                    references.Add(new PropertyDataReference(fieldDecl.DeclaredElement!.ContainingType, fieldVal));
+                }
 
 
                 return new ReferenceCollection(
