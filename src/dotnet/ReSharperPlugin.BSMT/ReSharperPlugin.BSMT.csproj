@@ -4,6 +4,7 @@
     <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
     <LangVersion>9</LangVersion>
     <RootNamespace>ReSharperPlugin.BSMT</RootNamespace>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
@@ -15,9 +16,16 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="JetBrains.ReSharper.SDK" Version="$(SdkVersion)" PrivateAssets="all" />
-    <PackageReference Include="JetBrains.Rider.Rider.Backend" Version="213.0.20211105.80453-eap07" />
 <!--    <PackageReference Include="JetBrains.ReSharperAutomationTools.src.ReSharperHost" version="211.0.20210722.100041"/>-->
     <!-- TODO: https://github.com/NuGet/Home/issues/7154 -->
     <PackageReference Include="Wave" Version="[$(WaveVersion),$(UpperWaveVersion))" />
@@ -29,6 +37,39 @@
     <Content Include="bin\$(AssemblyName)\$(Configuration)\$(AssemblyName).pdb" PackagePath="dotFiles" Pack="true" />
 
     <!-- TODO: add additional assemblies -->
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <EmbeddedResource Remove="Rider\**" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Compile Remove="Rider\**" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <None Remove="Rider\**" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <EmbeddedResource Remove="Rider\**" />
+    <EmbeddedResource Remove="bin\**" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Compile Remove="Rider\**" />
+    <Compile Remove="bin\**" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <None Remove="Rider\**" />
+    <None Remove="bin\**" />
   </ItemGroup>
 
   <!-- WARNING: ReSharper plugins with icons must be compiled using PowerShell scripts -->
