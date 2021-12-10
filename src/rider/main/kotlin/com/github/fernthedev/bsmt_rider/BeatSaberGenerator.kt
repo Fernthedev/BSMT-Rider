@@ -166,7 +166,7 @@ object BeatSaberGenerator {
 
         node.add(beatSaberFolder)
 
-        propertyGroupNode.set<JsonNode>("BeatSaberDir", node)
+        propertyGroupNode.set<JsonNode>("GameDirectory", node)
 
         val writer = ProjectUtils.xmlParser.writer().withDefaultPrettyPrinter().withRootName("Project")
 
@@ -229,7 +229,7 @@ object BeatSaberGenerator {
                 <Project>
                   <PropertyGroup>
                 		<!-- Change this path if necessary. Make sure it ends with a backslash. -->
-                		<BeatSaberDir>$beatSaberFolder</BeatSaberDir>
+                		<GameDirectory>$beatSaberFolder</GameDirectory>
                   </PropertyGroup>
                 </Project>
             """.trimIndent()

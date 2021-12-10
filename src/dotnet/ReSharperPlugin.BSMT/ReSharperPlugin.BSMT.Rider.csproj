@@ -3,20 +3,31 @@
     <PropertyGroup>
         <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
         <LangVersion>9</LangVersion>
+        <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
     <PropertyGroup>
-        <TargetFramework>net461</TargetFramework>
+        <TargetFramework>net48</TargetFramework>
         <AssemblyName>ReSharperPlugin.BSMT</AssemblyName>
         <RootNamespace>$(AssemblyName)</RootNamespace>
         <IsPackable>false</IsPackable>
         <DefineConstants>$(DefineConstants);RIDER</DefineConstants>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <PlatformTarget>x64</PlatformTarget>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <PlatformTarget>x64</PlatformTarget>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="JetBrains.Rider.SDK" Version="$(SdkVersion)" />
+        <!-- https://www.nuget.org/packages/JetBrains.Rider.Rider.Backend -->
+        <PackageReference Include="JetBrains.Rider.Rider.Backend" Version="213.0.20211207.80411" />
     </ItemGroup>
 
     <!-- TODO: uncomment for xaml icons -->

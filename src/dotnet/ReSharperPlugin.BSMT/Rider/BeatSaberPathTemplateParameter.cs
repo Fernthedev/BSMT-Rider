@@ -2,12 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Application;
-using JetBrains.ReSharper.Host.Features.ProjectModel.ProjectTemplates.DotNetExtensions;
-using JetBrains.ReSharper.Host.Features.ProjectModel.ProjectTemplates.DotNetTemplates;
-using JetBrains.ReSharper.Resources.Shell;
+using JetBrains.Rider.Backend.Features.ProjectModel.ProjectTemplates.DotNetExtensions;
+using JetBrains.Rider.Backend.Features.ProjectModel.ProjectTemplates.DotNetTemplates;
 using JetBrains.Rider.Model;
 using JetBrains.Util;
-using ReSharperPlugin.BSMT_Rider.Rider.Model;
 
 // TODO: Somehow validate if custom path folder is a Beat Saber folder
 namespace ReSharperPlugin.BSMT_Rider
