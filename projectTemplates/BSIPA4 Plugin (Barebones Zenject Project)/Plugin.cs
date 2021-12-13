@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using IPA;
 using IPA.Config;
 using IPA.Config.Stores;
-using UnityEngine.SceneManagement;
-using UnityEngine;
+using SiraUtil.Zenject;
+using $safeprojectname$.Configuration;
+using $safeprojectname$.Installers;
 using IPALogger = IPA.Logging.Logger;
 
 namespace $safeprojectname$
@@ -20,21 +18,17 @@ namespace $safeprojectname$
         internal PluginConfig _config;
 
         [Init]
-        /// <summary>
-        /// Called when the plugin is first loaded by IPA (either when the game starts or when the plugin is enabled if it starts disabled).
-        /// [Init] methods that use a Constructor or called before regular methods like InitWithConfig.
-        /// Only use [Init] with one Constructor.
-        /// </summary>
-        public void Init(IPALogger logger, Config config)
+        public void Init(Zenjector zenjector, IPALogger logger, Config config)
         {
             Instance = this;
             Log = logger;
 
             zenjector.UseLogger(logger);
-            zenjector.UseMetadataBinder(Plugin);
+            zenjector.UseMetadataBinder<Plugin>();
             
             // This logic also goes for installing to Menu and Game. "Location." will give you a list of places to install to.
             zenjector.Install<AppInstaller>(Location.App, config.Generated<PluginConfig>());
+            // zenjector.Install<{Menu|Game}Installer>(Location.{Menu|Game}>());
         }
     }
 }

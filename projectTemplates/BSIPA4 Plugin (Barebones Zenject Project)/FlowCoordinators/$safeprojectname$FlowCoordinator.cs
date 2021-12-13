@@ -1,12 +1,15 @@
 using BeatSaberMarkupLanguage;
 using SiraUtil.Logging;
+using HMUI;
+using System;
 
-namespace $safeprojectname$.FlowCoordinators : FlowCoordinator
+namespace $safeprojectname$.FlowCoordinators
 {
-    internal class $safeprojectname$FlowCoordinator
+    internal class $safeprojectname$FlowCoordinator : FlowCoordinator
     {
-
         private SiraLog _siraLog;
+		private MainFlowCoordinator _mainFlowCoordinator;		
+
         public void Construct(MainFlowCoordinator mainFlowCoordinator, SiraLog siraLog)
         {
             _mainFlowCoordinator = mainFlowCoordinator;
