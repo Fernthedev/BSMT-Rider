@@ -19,12 +19,7 @@ namespace $safeprojectname$
         internal static IPALogger Log { get; private set; }
         internal PluginConfig _config;
 
-        [Init]
-        /// <summary>
-        /// Called when the plugin is first loaded by IPA (either when the game starts or when the plugin is enabled if it starts disabled).
-        /// [Init] methods that use a Constructor or called before regular methods like InitWithConfig.
-        /// Only use [Init] with one Constructor.
-        /// </summary>
+        [Init] // This is called on plugin start, hence Init.
         public void Init(IPALogger logger, Config config)
         {
             Instance = this;
