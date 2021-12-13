@@ -33,6 +33,7 @@ namespace $safeprojectname$
             zenjector.UseLogger(logger);
             zenjector.UseMetadataBinder(Plugin);
             
+            // This logic also goes for installing to Menu and Game. "Location." will give you a list of places to install to.
             zenjector.Install<AppInstaller>(Location.App, config.Generated<PluginConfig>());
         }
     }
