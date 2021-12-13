@@ -28,7 +28,7 @@ namespace $safeprojectname$
             
             // This logic also goes for installing to Menu and Game. "Location." will give you a list of places to install to.
             zenjector.Install<AppInstaller>(Location.App, config.Generated<PluginConfig>());
-            // zenjector.Install<{Menu|Game}Installer>(Location.{Menu|Game}>());
+            // zenjector.Install<{Menu|Game}Installer>(Location.{Menu|Game}>()); Remove the one you don't need and the { }.
         }
     }
 }
