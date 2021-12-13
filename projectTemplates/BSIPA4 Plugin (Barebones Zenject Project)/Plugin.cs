@@ -11,12 +11,13 @@ using IPALogger = IPA.Logging.Logger;
 
 namespace $safeprojectname$
 {
-
-    [Plugin(RuntimeOptions.SingleStartInit)]
+    [Plugin(RuntimeOptions.DynamicInit), NoEnableDisable]  // NoEnableDisable supresses the warnings of not having a OnEnable/OnStart
+                                                           // and OnDisable/OnExit methods
     public class Plugin
     {
         internal static Plugin Instance { get; private set; }
         internal static IPALogger Log { get; private set; }
+        internal PluginConfig _config;
 
         [Init]
         /// <summary>
@@ -24,38 +25,15 @@ namespace $safeprojectname$
         /// [Init] methods that use a Constructor or called before regular methods like InitWithConfig.
         /// Only use [Init] with one Constructor.
         /// </summary>
-        public void Init(IPALogger logger)
+        public void Init(IPALogger logger, Config config)
         {
             Instance = this;
             Log = logger;
-            Log.Info("$projectname$ initialized.");
-        }
 
-        #region BSIPA Config
-        //Uncomment to use BSIPA's config
-        /*
-        [Init]
-        public void InitWithConfig(Config conf)
-        {
-            Configuration.PluginConfig.Instance = conf.Generated<Configuration.PluginConfig>();
-            Log.Debug("Config loaded");
-        }
-        */
-        #endregion
-
-        [OnStart]
-        public void OnApplicationStart()
-        {
-            Log.Debug("OnApplicationStart");
-            new GameObject("$safeprojectname$Controller").AddComponent<$safeprojectname$Controller>();
-
-        }
-
-        [OnExit]
-        public void OnApplicationQuit()
-        {
-            Log.Debug("OnApplicationQuit");
-
+            zenjector.UseLogger(logger);
+            zenjector.UseMetadataBinder(Plugin);
+            
+            zenjector.Install<AppInstaller>(Location.App, config.Generated<PluginConfig>());
         }
     }
 }
