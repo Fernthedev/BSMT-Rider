@@ -1,9 +1,9 @@
 using BeatSaberMarkupLanguage;
 using SiraUtil.Logging;
 
-namespace $safeprojectname$.FlowCoordinators : FlowCoordinator
+namespace $safeprojectname$.FlowCoordinators
 {
-    internal class $safeprojectname$FlowCoordinator
+    internal class $safeprojectname$FlowCoordinator : FlowCoordinator
     {
 
         private SiraLog _siraLog;
