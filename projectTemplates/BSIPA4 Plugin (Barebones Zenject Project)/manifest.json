@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/bsmg/BSIPA-MetadataFileSchema/master/Schema.json",
+  "id": "Name of your mod",
+  "name": "Name of your Mod",
+  "author": "Your name",
+  "version": "MAJOR.MINOR.PATCH",
+  "description": "",
+  "gameVersion": "1.19.0",
+  "dependsOn": {
+    "BSIPA": "^4.2.0",
+    "BeatSaberMarkupLanguage": "^1.5.12",
+    "SiraUtil": "^3.0.0"
+  }
+}
