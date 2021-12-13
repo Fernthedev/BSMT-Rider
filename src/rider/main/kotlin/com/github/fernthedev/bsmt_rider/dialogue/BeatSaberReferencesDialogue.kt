@@ -9,6 +9,7 @@ import com.intellij.util.PathUtil
 import com.intellij.util.ui.FormBuilder
 import com.intellij.util.ui.UI
 import java.io.File
+import java.util.*
 import javax.swing.JComponent
 import javax.swing.table.AbstractTableModel
 
@@ -30,7 +31,7 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
 
         _foundBeatSaberReferences = beatSaberFolders.map { folder ->
             folder.listFiles { it ->
-                it.extension.toLowerCase() == "dll" &&
+                it.extension.lowercase(Locale.getDefault()) == "dll" &&
                         existingReferencesMatch.none { ref ->
                             ref == it.name
                         }

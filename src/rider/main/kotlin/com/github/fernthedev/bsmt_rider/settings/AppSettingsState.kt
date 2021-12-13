@@ -31,10 +31,15 @@ class AppSettingsState : PersistentStateComponent<AppSettingsState> {
 
             if (dialogue.showAndGet()) {
 
-                val str = dialogue.beatSaberInput.selectedItem as String
+                val beatSaberPath = dialogue.beatSaberInput.selectedItem as String
 
-                if (str.isNotEmpty())
-                    return str
+                val addToConfig = dialogue.addToConfigCheckbox.isEnabled && dialogue.addToConfigCheckbox.isSelected
+                val makeDefault = dialogue.setAsDefault.isEnabled && dialogue.setAsDefault.isSelected
+
+                addToList(beatSaberPath, addToConfig, makeDefault)
+
+                if (beatSaberPath.isNotEmpty())
+                    return beatSaberPath
             }
 
             return null
@@ -46,6 +51,23 @@ class AppSettingsState : PersistentStateComponent<AppSettingsState> {
         }
 
         return result
+    }
+
+    private fun addToList(path: String, addToConfig: Boolean, default: Boolean) {
+        if (path.isEmpty())
+            return
+
+        if (addToConfig && !beatSaberFolders.any {path == it}) {
+            val newList = beatSaberFolders.toMutableList()
+            newList.add(path)
+            beatSaberFolders = newList.toTypedArray()
+        }
+
+        if (default) {
+            defaultFolder = path
+            // Use default folder must be set to true
+            useDefaultFolder = true
+        }
     }
 
     override fun getState(): AppSettingsState {
