@@ -3,26 +3,27 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.5.20'
-    id 'org.jetbrains.intellij' version '1.1.2' // https://github.com/JetBrains/gradle-intellij-plugin/releases
-    id 'com.jetbrains.rdgen' version '0.211.235'    // https://www.myget.org/feed/rd-snapshots/package/maven/com.jetbrains.rd/rd-gen
+    id 'org.jetbrains.kotlin.jvm' version '1.6.10'
+    id 'org.jetbrains.intellij' version '1.4.0' // https://github.com/JetBrains/gradle-intellij-plugin/releases
+    id 'com.jetbrains.rdgen' version '0.213.394'    // https://www.myget.org/feed/rd-snapshots/package/maven/com.jetbrains.rd/rd-gen
 }
 
 ext {
     isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
     rdLibDirectory = {
-        new File(intellij.getIdeaDependency(project).classes, "lib/rd")
+        new File(setupDependencies.idea.get().classes, "lib/rd")
     }
 }
 
 repositories {
     maven { url 'https://cache-redirector.jetbrains.com/intellij-repository/snapshots' }
     maven { url 'https://cache-redirector.jetbrains.com/maven-central' }
+    mavenCentral()
 }
 
 dependencies {
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.12.3'
-    implementation 'com.fasterxml.woodstox:woodstox-core:6.2.6'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.1'
+    implementation 'com.fasterxml.woodstox:woodstox-core:6.2.8'
 }
 
 wrapper {
@@ -30,7 +31,7 @@ wrapper {
     distributionType = Wrapper.DistributionType.ALL
     distributionUrl = "https://cache-redirector.jetbrains.com/services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
-sourceCompatibility = targetCompatibility = '1.8'
+sourceCompatibility = targetCompatibility = '11'
 version = ext.PluginVersion
 
 sourceSets {
@@ -41,7 +42,7 @@ sourceSets {
 }
 
 compileKotlin {
-    kotlinOptions { jvmTarget = "1.8" }
+    kotlinOptions { jvmTarget = "11" }
 }
 
 task setBuildTool {
