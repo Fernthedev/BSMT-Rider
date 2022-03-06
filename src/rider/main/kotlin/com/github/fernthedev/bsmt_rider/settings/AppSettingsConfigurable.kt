@@ -52,6 +52,7 @@ class AppSettingsConfigurable : Configurable {
 
             settings.beatSaberFolders = component.beatSaberFolders
             settings.useDefaultFolder = component.useDefaultFolder
+            settings.refreshOnProjectOpen = component.refreshOnProjectOpen
 
             if (settings.useDefaultFolder && component.defaultBeatSaberFolder == null)
                 throw ConfigurationException("You must specify the default beat saber folder")
@@ -69,6 +70,7 @@ class AppSettingsConfigurable : Configurable {
         component.beatSaberFolders = settings.beatSaberFolders
         component.useDefaultFolder = settings.useDefaultFolder
         component.defaultBeatSaberFolder = settings.defaultFolder
+        component.refreshOnProjectOpen = settings.refreshOnProjectOpen
 
 
         // TODO: Find a way to make request to Resharper even though it only runs on project load

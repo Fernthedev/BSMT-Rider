@@ -15,6 +15,7 @@ import javax.swing.table.AbstractTableModel
 
 
 /// $(Beat_Saber_Path)\Beat Saber_Data\Managed
+@OptIn(ExperimentalStdlibApi::class)
 class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String>, existingReferences: List<ReferenceXML>) : DialogWrapper(project) {
     private val _foundBeatSaberReferences: List<File>
     init {

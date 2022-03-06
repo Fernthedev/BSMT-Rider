@@ -45,6 +45,7 @@ class AppSettingsComponent {
     private val _useDefaultFolder = JBCheckBox("Use a default beat saber directory?")
     private var _defaultFolder = JBTextField()
     private val _getBeatSaberDirs = JButton("Locate Beat Saber Directories")
+    private val _refreshOnProjectOpen = JBCheckBox("Prompt/Regenerate the user.csproj file on project open")
 
     val preferredFocusedComponent: JComponent
         get() = _beatSaberFolders
@@ -60,6 +61,12 @@ class AppSettingsComponent {
         set(newStatus) {
             _useDefaultFolder.isSelected = newStatus
             _defaultFolder.isEnabled = newStatus
+        }
+
+    var refreshOnProjectOpen: Boolean
+        get() = _refreshOnProjectOpen.isSelected
+        set(newStatus) {
+            _refreshOnProjectOpen.isSelected = newStatus
         }
 
     var defaultBeatSaberFolder: String?
@@ -120,6 +127,7 @@ class AppSettingsComponent {
             .addLabeledComponent(JBLabel("Beat Saber game directories: "), _beatSaberFoldersToolbar.createPanel(), 1, true)
             .addComponent(_useDefaultFolder, 1)
             .addLabeledComponent(JBLabel("Default Beat Saber Directory:"), _defaultFolder, 1, false)
+            .addComponent(_refreshOnProjectOpen, 1)
             .addComponentFillVertically(JPanel(), 0)
             .panel
     }

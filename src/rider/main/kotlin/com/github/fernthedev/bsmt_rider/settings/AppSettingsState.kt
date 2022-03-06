@@ -20,6 +20,7 @@ class AppSettingsState : PersistentStateComponent<AppSettingsState> {
     var beatSaberFolders: Array<String> = emptyArray()
     var useDefaultFolder = false
     var defaultFolder: String? = null
+    var refreshOnProjectOpen: Boolean = true
 
     fun getBeatSaberDir(project: Project?) : String? {
         if (useDefaultFolder && defaultFolder != null)

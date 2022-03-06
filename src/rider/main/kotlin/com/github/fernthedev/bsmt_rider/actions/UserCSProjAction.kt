@@ -10,6 +10,7 @@ import com.jetbrains.rider.projectView.workspace.findProjects
 
 class UserCSProjAction : BeatSaberProjectAction() {
 
+    // Button to regenerate user.csproj
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.getData(CommonDataKeys.PROJECT)
 
