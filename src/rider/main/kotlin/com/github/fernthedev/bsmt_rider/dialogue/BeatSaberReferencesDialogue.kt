@@ -10,6 +10,7 @@ import com.intellij.ui.table.JBTable
 import com.intellij.util.PathUtil
 import com.intellij.util.ui.FormBuilder
 import com.intellij.util.ui.UI
+import java.awt.Dimension
 import java.io.File
 import java.util.*
 import javax.swing.JComponent
@@ -91,12 +92,17 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
 
 //        _beatSaberReferences.preferredScrollableViewportSize = _beatSaberReferences.preferredScrollableViewportSize
 
-        return FormBuilder.createFormBuilder()
+        val panel = FormBuilder.createFormBuilder()
             .addComponent(_filterBox)
             .addComponent(_parentDirectoryCheckbox)
             .addLabeledComponentFillVertically("BeatSaber references", _beatSaberReferencesScrollPane)
 //            .addComponentFillVertically(JPanel(GridLayout()), 0)
             .panel
+
+
+        panel.preferredSize = Dimension(UI.scale(340), UI.scale(350))
+
+        return panel
     }
 
     override fun doOKAction() {
