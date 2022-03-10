@@ -91,7 +91,10 @@ object BeatSaberReferenceManager {
         while (!ProgressManager.getInstance().runInReadActionWithWriteActionPriority({
                 ProgressManager.checkCanceled()
                 csprojFileXML = PsiManager.getInstance(project).findFile(csprojFile) as XmlFile
-                itemGroup = csprojFileXML.document?.rootTag?.findFirstSubTag("ItemGroup")!!
+                val groups = csprojFileXML.document?.rootTag?.findSubTags("ItemGroup")!!
+
+                itemGroup = groups.first { itemGroup -> itemGroup.subTags.any { it.name == "Reference" } }
+
                 refs = getReferences(itemGroup)
             }, null)) {
             Thread.yield()
