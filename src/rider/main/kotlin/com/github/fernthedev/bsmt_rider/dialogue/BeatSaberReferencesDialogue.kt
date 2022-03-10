@@ -4,6 +4,7 @@ import com.github.fernthedev.bsmt_rider.xml.ReferenceXML
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.table.JBTable
 import com.intellij.util.PathUtil
 import com.intellij.util.ui.FormBuilder
@@ -17,7 +18,14 @@ import javax.swing.table.AbstractTableModel
 /// $(Beat_Saber_Path)\Beat Saber_Data\Managed
 @OptIn(ExperimentalStdlibApi::class)
 class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String>, existingReferences: List<ReferenceXML>) : DialogWrapper(project) {
-    private val _foundBeatSaberReferences: List<File>
+    private val _foundBeatSaberReferences: List<BeatSaberReferencePair>
+
+    val references = ArrayList<File>()
+
+    private val _filterBox = JBTextField()
+    private val _beatSaberReferences: JBTable
+    private val _beatSaberReferencesScrollPane: JBScrollPane
+
     init {
         val beatSaberFolders = beatSaberPath.map { File(it) }.filter { it.exists() && it.isDirectory }
 
@@ -41,20 +49,28 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
         }.reduce { acc, arrayOfFiles ->
             acc + arrayOfFiles
             // Remove duplicates
-        }.distinct()
-    }
+        }.distinct().map {
+            BeatSaberReferencePair(false, it)
+        }
 
-    private val _beatSaberReferences = JBTable(BeatSaberReferenceTable(_foundBeatSaberReferences))
-    private val _beatSaberReferencesScrollPane = JBScrollPane(_beatSaberReferences)
 
-    val references = ArrayList<File>()
-
-    // This does actually order if you didn't know
-    init {
-        init()
         title = "Beat Saber Reference Manager"
+
+        _beatSaberReferences = JBTable(BeatSaberReferenceTable(_foundBeatSaberReferences))
         _beatSaberReferences.setShowColumns(true)
+
+        _beatSaberReferencesScrollPane = JBScrollPane(_beatSaberReferences)
+
+        _filterBox.emptyText.text = "Filter"
+        _filterBox.addCaretListener {
+            val beatSaberReferenceTable = _beatSaberReferences.model as BeatSaberReferenceTable
+            beatSaberReferenceTable.rows = _foundBeatSaberReferences.filter { it.file.path.lowercase().contains(_filterBox.text.lowercase()) }
+            beatSaberReferenceTable.fireTableDataChanged()
+        }
+
+        init()
     }
+
 
     override fun createCenterPanel(): JComponent {
         // This is not a self assignment, they are different methods!
@@ -68,6 +84,7 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
 //        _beatSaberReferences.preferredScrollableViewportSize = _beatSaberReferences.preferredScrollableViewportSize
 
         return FormBuilder.createFormBuilder()
+            .addComponent(_filterBox)
             .addLabeledComponentFillVertically("BeatSaber references", _beatSaberReferencesScrollPane)
 //            .addComponentFillVertically(JPanel(GridLayout()), 0)
             .panel
@@ -104,16 +121,13 @@ data class BeatSaberReferencePair(
 )
 
 
-class BeatSaberReferenceTable(files: List<File>) : AbstractTableModel() {
+class BeatSaberReferenceTable(files: List<BeatSaberReferencePair>) : AbstractTableModel() {
     private val columns: Array<ColumnEnum> = arrayOf(ColumnEnum.INCLUDE, ColumnEnum.REFERENCE)
 
-    private val rows = ArrayList<BeatSaberReferencePair>()
-
-    init {
-        files.forEach {
-            rows.add(BeatSaberReferencePair(false, it))
+    var rows: List<BeatSaberReferencePair> = ArrayList(files)
+        set(value) {
+            field = ArrayList(value)
         }
-    }
 
     /**
      * Returns a default name for the column using spreadsheet conventions:
@@ -189,6 +203,7 @@ class BeatSaberReferenceTable(files: List<File>) : AbstractTableModel() {
             -1 -> pair
             0 -> pair.included
             1 -> pair.file.nameWithoutExtension
+//            1 -> "${pair.file.parentFile.name}/${pair.file.nameWithoutExtension}"
             else -> null
         }
     }

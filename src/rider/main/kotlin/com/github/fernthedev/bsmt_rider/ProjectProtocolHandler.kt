@@ -17,7 +17,7 @@ class ProjectProtocolHandler(project: Project) : ProtocolSubscribedProjectCompon
         project.solution.isLoaded.whenTrue(projectComponentLifetime) {
             if (AppSettingsState.instance.refreshOnProjectOpen)
                 runBackgroundableTask("Create user.csproj", project) {
-                    BeatSaberGenerator.locateFoldersAndGenerate(WorkspaceModel.getInstance(project).findProjects(), project)
+                    BeatSaberProjectManager.locateFoldersAndGenerate(WorkspaceModel.getInstance(project).findProjects(), project)
                 }
 
 

@@ -17,7 +17,7 @@ data class BeatSaberFolders(
     val project: ProjectModelEntity
 )
 
-object BeatSaberGenerator {
+object BeatSaberProjectManager {
     private val selectedBeatSaberFolder = HashMap<Project, String?>()
 
     fun getSelectedBeatSaberFolder(project: Project): String? {
@@ -38,7 +38,7 @@ object BeatSaberGenerator {
         }
 
         folders.forEach {
-            if(generate(it.projectFolder, it.csprojFile, beatSaberFolder)) {
+            if(generateUserFile(it.projectFolder, it.csprojFile, beatSaberFolder)) {
                 filesToRefresh.add(it.projectFolder)
                 filesToRefresh.add(it.csprojFile)
             }
@@ -47,13 +47,13 @@ object BeatSaberGenerator {
         ProjectUtils.refreshProjectWithFiles(folders, filesToRefresh, project)
     }
 
-    private fun generate(folder: File, csprojFile: File, beatSaberFolder: String): Boolean {
+    private fun generateUserFile(folder: File, csprojFile: File, beatSaberFolder: String): Boolean {
         // Get the folder of the solution, then get the folder of the actual project
         val userFile = File(folder, "${csprojFile.name}.user")
 
         if (folder.exists() && isBeatSaberProject(csprojFile)) {
             if (userFile.exists()) {
-                return updateFileContent(userFile, beatSaberFolder)
+                return updateUserFile(userFile, beatSaberFolder)
             } else {
                 val userString = getBeatSaberFolder()
 
@@ -104,7 +104,7 @@ object BeatSaberGenerator {
 
     // TODO: Clean this up using POJO if possible.
     // This merges the previous XML data with the new one
-    private fun updateFileContent(userCsprojFile: File, beatSaberFolder: String): Boolean {
+    private fun updateUserFile(userCsprojFile: File, beatSaberFolder: String): Boolean {
         val file = VfsUtil.findFileByIoFile(userCsprojFile, true)!!
 
         var contents = ""

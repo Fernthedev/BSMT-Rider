@@ -1,6 +1,6 @@
 package com.github.fernthedev.bsmt_rider.actions
 
-import com.github.fernthedev.bsmt_rider.BeatSaberGenerator
+import com.github.fernthedev.bsmt_rider.BeatSaberProjectManager
 import com.github.fernthedev.bsmt_rider.BeatSaberUtils
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -38,7 +38,7 @@ abstract class BeatSaberProjectAction : AnAction() {
             enabled = enabled &&
                     !findProjects.isNullOrEmpty() && BeatSaberUtils.locateBeatSaberProjects(
                 findProjects
-            ).any { BeatSaberGenerator.isBeatSaberProject(it.csprojFile) }
+            ).any { BeatSaberProjectManager.isBeatSaberProject(it.csprojFile) }
         }.finishOnUiThread(ModalityState.NON_MODAL) {
             e.presentation.isEnabled = enabled
         }

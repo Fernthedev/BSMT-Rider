@@ -98,7 +98,7 @@ object BeatSaberReferenceManager {
         }
 
         val path =
-            project.getBeatSaberSelectedDir() ?: return // TODO: Make this get the beat saber dir from csproj.user?
+            project.getBeatSaberSelectedDir() ?: throw IllegalAccessException("No user csproj file found ${project.projectFilePath}:${project.name}") // TODO: Make this get the beat saber dir from csproj.user?
 
         val managedPath = BeatSaberUtils.getAssembliesOfBeatSaber(path)
         val libsPath = BeatSaberUtils.getLibsOfBeatSaber(path)

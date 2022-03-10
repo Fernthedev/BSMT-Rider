@@ -1,6 +1,6 @@
 package com.github.fernthedev.bsmt_rider.actions
 
-import com.github.fernthedev.bsmt_rider.BeatSaberGenerator
+import com.github.fernthedev.bsmt_rider.BeatSaberProjectManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.progress.runBackgroundableTask
@@ -16,7 +16,7 @@ class UserCSProjAction : BeatSaberProjectAction() {
 
         if (project != null && e.presentation.isEnabledAndVisible && findProjects != null) {
             runBackgroundableTask("Create user.csproj", project) {
-                BeatSaberGenerator.locateFoldersAndGenerate(WorkspaceModel.getInstance(project).findProjects() ,project)
+                BeatSaberProjectManager.locateFoldersAndGenerate(WorkspaceModel.getInstance(project).findProjects() ,project)
             }
         }
     }
