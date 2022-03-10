@@ -3,6 +3,7 @@ package com.github.fernthedev.bsmt_rider.dialogue
 import com.github.fernthedev.bsmt_rider.xml.ReferenceXML
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.table.JBTable
@@ -23,6 +24,7 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
     val references = ArrayList<File>()
 
     private val _filterBox = JBTextField()
+    private val _parentDirectoryCheckbox = JBCheckBox("Show parent directory", true)
     private val _beatSaberReferences: JBTable
     private val _beatSaberReferencesScrollPane: JBScrollPane
 
@@ -56,7 +58,7 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
 
         title = "Beat Saber Reference Manager"
 
-        _beatSaberReferences = JBTable(BeatSaberReferenceTable(_foundBeatSaberReferences))
+        _beatSaberReferences = JBTable(BeatSaberReferenceTable(_foundBeatSaberReferences, _parentDirectoryCheckbox.isSelected))
         _beatSaberReferences.setShowColumns(true)
 
         _beatSaberReferencesScrollPane = JBScrollPane(_beatSaberReferences)
@@ -65,6 +67,12 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
         _filterBox.addCaretListener {
             val beatSaberReferenceTable = _beatSaberReferences.model as BeatSaberReferenceTable
             beatSaberReferenceTable.rows = _foundBeatSaberReferences.filter { it.file.path.lowercase().contains(_filterBox.text.lowercase()) }
+            beatSaberReferenceTable.fireTableDataChanged()
+        }
+
+        _parentDirectoryCheckbox.addChangeListener {
+            val beatSaberReferenceTable = _beatSaberReferences.model as BeatSaberReferenceTable
+            beatSaberReferenceTable.showParentFolder = _parentDirectoryCheckbox.isSelected
             beatSaberReferenceTable.fireTableDataChanged()
         }
 
@@ -85,6 +93,7 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
 
         return FormBuilder.createFormBuilder()
             .addComponent(_filterBox)
+            .addComponent(_parentDirectoryCheckbox)
             .addLabeledComponentFillVertically("BeatSaber references", _beatSaberReferencesScrollPane)
 //            .addComponentFillVertically(JPanel(GridLayout()), 0)
             .panel
@@ -121,7 +130,7 @@ data class BeatSaberReferencePair(
 )
 
 
-class BeatSaberReferenceTable(files: List<BeatSaberReferencePair>) : AbstractTableModel() {
+class BeatSaberReferenceTable(files: List<BeatSaberReferencePair>, var showParentFolder: Boolean) : AbstractTableModel() {
     private val columns: Array<ColumnEnum> = arrayOf(ColumnEnum.INCLUDE, ColumnEnum.REFERENCE)
 
     var rows: List<BeatSaberReferencePair> = ArrayList(files)
@@ -202,8 +211,9 @@ class BeatSaberReferenceTable(files: List<BeatSaberReferencePair>) : AbstractTab
             // We use this ourselves
             -1 -> pair
             0 -> pair.included
-            1 -> pair.file.nameWithoutExtension
-//            1 -> "${pair.file.parentFile.name}/${pair.file.nameWithoutExtension}"
+            1 ->
+                if(showParentFolder) "${pair.file.parentFile.name}/${pair.file.nameWithoutExtension}"
+                else pair.file.nameWithoutExtension
             else -> null
         }
     }
