@@ -13,7 +13,7 @@ namespace $safeprojectname$.FlowCoordinators
         public void Construct(MainFlowCoordinator mainFlowCoordinator, SiraLog siraLog)
         {
             _mainFlowCoordinator = mainFlowCoordinator;
-            _siraLog = _siraLog; // SiraLog is preferred by a lot of people, as it
+            _siraLog = siraLog; // SiraLog is preferred by a lot of people, as it
 								 // injects context into the logs.
         }
         
