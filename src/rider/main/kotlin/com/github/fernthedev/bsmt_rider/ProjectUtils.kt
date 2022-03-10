@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.xml.util.DefaultXmlPrettyPrinter
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
-import com.jetbrains.rd.platform.util.application
+import com.intellij.util.application
 import com.jetbrains.rider.model.ReloadCommand
 import com.jetbrains.rider.model.UnloadCommand
 import com.jetbrains.rider.model.projectModelTasks
@@ -27,8 +27,8 @@ object ProjectUtils {
             .build()
 
 
-    fun refreshProjectWithFiles(folders: List<BeatSaberFolders>, filesToRefresh: List<File>, project: Project?) {
-        if (filesToRefresh.isNotEmpty() && project != null) {
+    fun refreshProjectWithFiles(folders: List<BeatSaberFolders>, filesToRefresh: List<File>, project: Project) {
+        if (filesToRefresh.isNotEmpty()) {
 
             // TODO: Make this only run if a `csproj.user` file has been created or modified, not all the time
             // We do this to force ordering

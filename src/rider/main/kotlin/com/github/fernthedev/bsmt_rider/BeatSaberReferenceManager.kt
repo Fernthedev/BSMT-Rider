@@ -28,10 +28,10 @@ import kotlin.io.path.nameWithoutExtension
 object BeatSaberReferenceManager {
 
     private fun getReferences(itemGroup: XmlTag): List<ReferenceXML> {
-        val refs = ArrayList<ReferenceXML>()
-
         if (itemGroup.isEmpty)
             return emptyList()
+
+        val refs = ArrayList<ReferenceXML>(itemGroup.subTags.size)
 
         itemGroup.subTags.forEach {
             if (it.subTags.isNotEmpty()) {

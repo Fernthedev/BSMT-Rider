@@ -1,12 +1,14 @@
 package com.github.fernthedev.bsmt_rider
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.fernthedev.bsmt_rider.settings.AppSettingsState
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.psi.PsiManager
+import com.intellij.psi.XmlElementFactory
+import com.intellij.psi.xml.XmlFile
+import com.intellij.psi.xml.XmlTag
 import com.jetbrains.rider.projectView.workspace.ProjectModelEntity
 import java.io.File
 
@@ -38,8 +40,9 @@ object BeatSaberProjectManager {
         }
 
         if (generate) {
+            project!!
             folders.forEach {
-                if (generateUserFile(it.projectFolder, it.csprojFile, beatSaberFolder)) {
+                if (generateUserFile(it.projectFolder, it.csprojFile, beatSaberFolder, project)) {
                     filesToRefresh.add(it.projectFolder)
                     filesToRefresh.add(it.csprojFile)
                 }
@@ -49,13 +52,13 @@ object BeatSaberProjectManager {
         }
     }
 
-    private fun generateUserFile(folder: File, csprojFile: File, beatSaberFolder: String): Boolean {
+    private fun generateUserFile(folder: File, csprojFile: File, beatSaberFolder: String, project: Project): Boolean {
         // Get the folder of the solution, then get the folder of the actual project
         val userFile = File(folder, "${csprojFile.name}.user")
 
         if (folder.exists() && isBeatSaberProject(csprojFile)) {
             if (userFile.exists()) {
-                return updateUserFile(userFile, beatSaberFolder)
+                return updateUserFile(userFile, beatSaberFolder, project)
             } else {
                 val userString = getBeatSaberFolder()
 
@@ -104,117 +107,69 @@ object BeatSaberProjectManager {
                 contents.contains("$(BeatSaberDir)")
     }
 
-    // TODO: Clean this up using POJO if possible.
     // This merges the previous XML data with the new one
-    private fun updateUserFile(userCsprojFile: File, beatSaberFolder: String): Boolean {
+    private fun updateUserFile(userCsprojFile: File, beatSaberFolder: String, project: Project): Boolean {
         val file = VfsUtil.findFileByIoFile(userCsprojFile, true)!!
 
-        var contents = ""
-        while (!ProgressManager.getInstance().runInReadActionWithWriteActionPriority({
-                ProgressManager.checkCanceled()
-                contents = VfsUtil.loadText(file)
-            }, null)) {
-            // Avoid using resources
-            Thread.yield()
+        lateinit var csprojFileXML: XmlFile
+
+        if (ApplicationManager.getApplication().isReadAccessAllowed) {
+            csprojFileXML = PsiManager.getInstance(project).findFile(file) as XmlFile
+
+        } else {
+            require(!ApplicationManager.getApplication().isDispatchThread)
+
+            while (!ProgressManager.getInstance().runInReadActionWithWriteActionPriority({
+                    ProgressManager.checkCanceled()
+
+                    // TODO:
+                    csprojFileXML = PsiManager.getInstance(project).findFile(file) as XmlFile
+                }, null)) {
+                Thread.yield()
+            }
         }
 
         // Skip if user.csproj already contains reference
         // Replace \ to / allows for paths to be resolved universally
-        if (contents.trimIndent().replace("\\","/").contains(
-                """
+        if (csprojFileXML.textMatches("""
                     <BeatSaberDir>${beatSaberFolder.replace("\\","/")}</BeatSaberDir>
-                    """.trimIndent(),
-                ignoreCase = true
-            )
+                    """.trimIndent())
         ) {
             return false
         }
 
-
-        val startIndex = contents.indexOf("<Project")
-        val endString = "</Project>"
-        val endIndex = contents.indexOf(endString) + endString.length
-
-        var parsedContent = contents
-
-        // Get from the start of project to end of file
-        if (startIndex != 0 && startIndex > 0) {
-            parsedContent = contents.substring(startIndex, endIndex)
-        }
-
-        // Trim end to end of </Project>
-        if (endIndex != contents.lastIndex)
-            parsedContent = parsedContent.substring(0, parsedContent.indexOf(endString) + endString.length)
-
-        val xmlPreData = ProjectUtils.xmlParser.readTree(parsedContent)
-
-        val xmlData: ObjectNode = if (xmlPreData is ObjectNode) {
-            xmlPreData
-        } else {
-            ProjectUtils.xmlParser.createObjectNode()
-        }
-
-        // Modify
-        val propertyGroupNodePre: JsonNode? = xmlData["PropertyGroup"]
-        val propertyGroupNode: ObjectNode
-        if (propertyGroupNodePre == null || propertyGroupNodePre.isNull || propertyGroupNodePre !is ObjectNode) {
-            propertyGroupNode = ProjectUtils.xmlParser.createObjectNode()
-            xmlData.set<ObjectNode>("PropertyGroup", propertyGroupNode)
-        } else {
-            propertyGroupNode = propertyGroupNodePre
-        }
-
-        val node = ProjectUtils.xmlParser.createArrayNode()
-
-        node.add(beatSaberFolder)
-
-        propertyGroupNode.set<JsonNode>("BeatSaberDir", node)
-
-        val writer = ProjectUtils.xmlParser.writer().withDefaultPrettyPrinter().withRootName("Project")
-
-        // Merge xml
-        val body = writer.writeValueAsString(xmlData)
-
-        // This will merge the contents of the XML and new XML
-        val finalString = StringBuilder()
-
-        when {
-            // Merge XML
-            startIndex > 0 -> {
-
-                val end = if (endIndex != contents.lastIndex && endIndex + 1 < contents.lastIndex) {
-                    contents.substring(endIndex + 1, contents.lastIndex)
-                } else {
-                    ""
-                }
-
-                finalString
-                    .append(contents.substring(0, startIndex - 1)).append("\n") // Head
-                    .append(body) // Body
-                    .append(end) // End
-            }
-            // Project was never defined
-            startIndex < 0 -> {
-                finalString
-                    .append(contents).append("\n")
-                    .append(body)
-            }
-            // Project was first
-            else -> {
-                val end = if (endIndex != contents.lastIndex && endIndex + 1 < contents.lastIndex) {
-                    contents.substring(endIndex + 1, contents.lastIndex)
-                } else {
-                    ""
-                }
-
-                finalString.append(body)
-                    .append(end)
-            }
-        }
+        if (csprojFileXML.document == null) throw IllegalAccessException("CSPROJ FILE DOCUMENT IS NULL TELL FERN ABOUT THIS")
 
         ApplicationManager.getApplication().invokeLaterOnWriteThread {
             ApplicationManager.getApplication().runWriteAction {
-                VfsUtil.saveText(file, finalString.toString())
+                val xmlFactory = XmlElementFactory.getInstance(project)
+                val xmlDocument = csprojFileXML.document!!
+                var rootTag = csprojFileXML.rootTag
+
+                if (rootTag == null) {
+                    rootTag = xmlDocument.add(xmlFactory.createTagFromText("Project")) as XmlTag
+                }
+
+                val propertyGroups = rootTag.findSubTags("PropertyGroup");
+
+                if (propertyGroups.isEmpty()) {
+                    val propertyGroup = rootTag.createChildTag("PropertyGroup", "", "", false)
+
+                    val beatSaberDirTag = propertyGroup.createChildTag("BeatSaberDir", "", beatSaberFolder, false)
+
+
+                } else {
+                    var beatSaberDirTag = propertyGroups.find {
+                        it.name == "BeatSaberDir"
+                    }
+                    val newValue = propertyGroups.first().createChildTag("BeatSaberDir", "", beatSaberFolder, false);
+
+                    if (beatSaberDirTag == null) {
+                        beatSaberDirTag = newValue
+                    } else {
+                        beatSaberDirTag.replace(newValue)
+                    }
+                }
             }
         }
 

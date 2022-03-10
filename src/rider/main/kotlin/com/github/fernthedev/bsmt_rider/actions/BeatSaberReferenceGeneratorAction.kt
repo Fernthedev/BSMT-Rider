@@ -4,7 +4,6 @@ import com.github.fernthedev.bsmt_rider.BeatSaberReferenceManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.progress.runBackgroundableTask
-import com.jetbrains.rider.projectView.workspace.ProjectModelEntity
 
 
 class BeatSaberReferenceGeneratorAction : BeatSaberProjectAction() {
