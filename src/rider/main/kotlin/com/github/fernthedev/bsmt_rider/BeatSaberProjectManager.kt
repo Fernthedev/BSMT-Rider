@@ -27,7 +27,7 @@ object BeatSaberProjectManager {
 
 
 
-    fun locateFoldersAndGenerate(items: List<ProjectModelEntity>?, project: Project?) {
+    fun locateFoldersAndGenerate(items: List<ProjectModelEntity>?, project: Project?, generate: Boolean) {
         val folders = BeatSaberUtils.locateBeatSaberProjects(items)
         val filesToRefresh: MutableList<File> = mutableListOf()
 
@@ -37,14 +37,16 @@ object BeatSaberProjectManager {
             selectedBeatSaberFolder[project] = beatSaberFolder
         }
 
-        folders.forEach {
-            if(generateUserFile(it.projectFolder, it.csprojFile, beatSaberFolder)) {
-                filesToRefresh.add(it.projectFolder)
-                filesToRefresh.add(it.csprojFile)
+        if (generate) {
+            folders.forEach {
+                if (generateUserFile(it.projectFolder, it.csprojFile, beatSaberFolder)) {
+                    filesToRefresh.add(it.projectFolder)
+                    filesToRefresh.add(it.csprojFile)
+                }
             }
-        }
 
-        ProjectUtils.refreshProjectWithFiles(folders, filesToRefresh, project)
+            ProjectUtils.refreshProjectWithFiles(folders, filesToRefresh, project)
+        }
     }
 
     private fun generateUserFile(folder: File, csprojFile: File, beatSaberFolder: String): Boolean {

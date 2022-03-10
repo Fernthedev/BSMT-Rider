@@ -15,10 +15,10 @@ class ProjectProtocolHandler(project: Project) : ProtocolSubscribedProjectCompon
     init {
         // Called when a project is open
         project.solution.isLoaded.whenTrue(projectComponentLifetime) {
-            if (AppSettingsState.instance.refreshOnProjectOpen)
-                runBackgroundableTask("Create user.csproj", project) {
-                    BeatSaberProjectManager.locateFoldersAndGenerate(WorkspaceModel.getInstance(project).findProjects(), project)
-                }
+
+            runBackgroundableTask("Create user.csproj", project) {
+                BeatSaberProjectManager.locateFoldersAndGenerate(WorkspaceModel.getInstance(project).findProjects(), project, AppSettingsState.instance.refreshOnProjectOpen)
+            }
 
 
 //            model.foundBeatSaberLocations.runUnderProgress(null, project, "t", isCancelable = false, throwFault = false)
