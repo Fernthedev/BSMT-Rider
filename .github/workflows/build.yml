@@ -20,7 +20,9 @@ jobs:
         uses: gradle/gradle-build-action@v2
 
       - name: Execute Gradle build
-        run: ./gradlew buildPlugin
+        run: |
+        chmod +x ./gradlew
+        ./gradlew buildPlugin
 
       - name: Publish built artifacts
         uses: actions/upload-artifact@v3
