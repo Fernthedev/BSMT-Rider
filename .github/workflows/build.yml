@@ -10,8 +10,8 @@ jobs:
           distribution: temurin
           java-version: 11
 
-      - name: Setup MSBuild Path
-        uses: microsoft/setup-msbuild@v1
+#      - name: Setup MSBuild Path
+#        uses: microsoft/setup-msbuild@v1
 
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v1
