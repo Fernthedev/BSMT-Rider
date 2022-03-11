@@ -4,7 +4,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
+#pragma warning disable CS8604
+
+
+// ReSharper disable All
+#pragma warning disable CS8603
+#pragma warning disable CS8600
 
 namespace ReSharperPlugin.BSMT_Rider
 {
