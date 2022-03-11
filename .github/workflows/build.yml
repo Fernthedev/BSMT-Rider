@@ -23,7 +23,7 @@ jobs:
         run: ./gradlew buildPlugin
 
       - name: Publish built artifacts
-      - uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3
         with:
           name: BSMT-Rider.zip
           path: output/
