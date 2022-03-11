@@ -21,8 +21,8 @@ jobs:
 
       - name: Execute Gradle build
         run: |
-        chmod +x ./gradlew
-        ./gradlew buildPlugin
+          chmod +x ./gradlew
+          ./gradlew buildPlugin
 
       - name: Publish built artifacts
         uses: actions/upload-artifact@v3
