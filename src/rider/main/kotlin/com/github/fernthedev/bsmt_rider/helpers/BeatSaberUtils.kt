@@ -1,5 +1,6 @@
-package com.github.fernthedev.bsmt_rider
+package com.github.fernthedev.bsmt_rider.helpers
 
+import com.github.fernthedev.bsmt_rider.BeatSaberFolders
 import com.jetbrains.rider.model.RdCustomLocation
 import com.jetbrains.rider.model.RdProjectDescriptor
 import com.jetbrains.rider.projectView.workspace.ProjectModelEntity

@@ -22,7 +22,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.1'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.2'
     implementation 'com.fasterxml.woodstox:woodstox-core:6.2.8'
 }
 

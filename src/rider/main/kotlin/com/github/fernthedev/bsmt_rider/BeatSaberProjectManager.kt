@@ -2,6 +2,8 @@ package com.github.fernthedev.bsmt_rider
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.github.fernthedev.bsmt_rider.helpers.BeatSaberUtils
+import com.github.fernthedev.bsmt_rider.helpers.ProjectUtils
 import com.github.fernthedev.bsmt_rider.settings.AppSettingsState
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.progress.ProgressManager

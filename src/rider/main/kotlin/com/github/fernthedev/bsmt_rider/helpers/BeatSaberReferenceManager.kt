@@ -1,4 +1,4 @@
-package com.github.fernthedev.bsmt_rider
+package com.github.fernthedev.bsmt_rider.helpers
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.fernthedev.bsmt_rider.dialogue.BeatSaberReferencesDialogue
@@ -55,8 +55,6 @@ object BeatSaberReferenceManager {
         project: Project,
         projectData: ProjectModelEntity
     ) {
-        if (refsToAdd.isEmpty()) return
-
         invokeLater {
             WriteCommandAction.runWriteCommandAction(project) {
                 // add to root if not already
@@ -86,8 +84,9 @@ object BeatSaberReferenceManager {
         }
     }
 
-    // TODO: Coroutine
     fun askToAddReferences(project: Project) {
+        require(!ApplicationManager.getApplication().isDispatchThread)
+
         val projectData: ProjectModelEntity =
             WorkspaceModel.getInstance(project).findProjectsByName(project.name).first()
         val projectRdData: RdProjectDescriptor = projectData.descriptor as RdProjectDescriptor

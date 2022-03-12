@@ -1,10 +1,11 @@
-package com.github.fernthedev.bsmt_rider
+package com.github.fernthedev.bsmt_rider.helpers
 
 import com.ctc.wstx.stax.WstxInputFactory
 import com.ctc.wstx.stax.WstxOutputFactory
 import com.fasterxml.jackson.dataformat.xml.XmlFactory
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.dataformat.xml.util.DefaultXmlPrettyPrinter
+import com.github.fernthedev.bsmt_rider.BeatSaberFolders
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil

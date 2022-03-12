@@ -1,7 +1,7 @@
 package com.github.fernthedev.bsmt_rider.actions
 
 import com.github.fernthedev.bsmt_rider.BeatSaberProjectManager
-import com.github.fernthedev.bsmt_rider.BeatSaberUtils
+import com.github.fernthedev.bsmt_rider.helpers.BeatSaberUtils
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
