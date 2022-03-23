@@ -52,9 +52,12 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
         }.reduce { acc, arrayOfFiles ->
             acc + arrayOfFiles
             // Remove duplicates
-        }.distinct().map {
-            BeatSaberReferencePair(false, it)
-        }
+        }.distinct()
+            .sortedBy {
+                it.name
+            }.map {
+                BeatSaberReferencePair(false, it)
+            }
 
 
         title = "Beat Saber Reference Manager"
@@ -103,6 +106,10 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
         panel.preferredSize = Dimension(UI.scale(340), UI.scale(350))
 
         return panel
+    }
+
+    override fun getPreferredFocusedComponent(): JComponent? {
+        return _filterBox
     }
 
     override fun doOKAction() {
