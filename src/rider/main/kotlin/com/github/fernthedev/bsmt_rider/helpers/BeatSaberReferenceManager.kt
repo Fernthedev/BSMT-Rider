@@ -74,9 +74,21 @@ object BeatSaberReferenceManager {
 
                     val includeName = Path(ref.stringHintPath).nameWithoutExtension
 
-                    tag.setAttribute("Include", includeName.replace("\r\n", "\n"))
+                    val include = includeName.replace("\r\n", "\n")
+                    tag.setAttribute("Include", include)
 
-                    itemGroup.addSubTag(tag, false)
+                    var added = false
+                    for (subTag in itemGroup.subTags) {
+                        val nextInclude = subTag.getAttributeValue("Include")
+                        if (nextInclude != null && nextInclude > include) {
+                            itemGroup.addBefore(tag, subTag)
+                            added = true
+                            break
+                        }
+                    }
+                    if (!added) {
+                        itemGroup.addSubTag(tag, false)
+                    }
                 }
             }
 
