@@ -52,12 +52,9 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
         }.reduce { acc, arrayOfFiles ->
             acc + arrayOfFiles
             // Remove duplicates
-        }.distinct()
-            .sortedBy {
-                it.name
-            }.map {
-                BeatSaberReferencePair(false, it)
-            }
+        }.distinct().map {
+            BeatSaberReferencePair(false, it)
+        }
 
 
         title = "Beat Saber Reference Manager"
