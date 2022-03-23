@@ -3,9 +3,9 @@ package com.github.fernthedev.bsmt_rider.dialogue
 import com.github.fernthedev.bsmt_rider.xml.ReferenceXML
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.ui.SearchTextField
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBScrollPane
-import com.intellij.ui.components.JBTextField
 import com.intellij.ui.table.JBTable
 import com.intellij.util.PathUtil
 import com.intellij.util.ui.FormBuilder
@@ -24,7 +24,7 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
 
     val references = ArrayList<File>()
 
-    private val _filterBox = JBTextField()
+    private val _searchBox = SearchTextField(false)
     private val _parentDirectoryCheckbox = JBCheckBox("Show parent directory", true)
     private val _beatSaberReferences: JBTable
     private val _beatSaberReferencesScrollPane: JBScrollPane
@@ -67,10 +67,9 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
 
         _beatSaberReferencesScrollPane = JBScrollPane(_beatSaberReferences)
 
-        _filterBox.emptyText.text = "Filter"
-        _filterBox.addCaretListener {
+        _searchBox.textEditor.addCaretListener {
             val beatSaberReferenceTable = _beatSaberReferences.model as BeatSaberReferenceTable
-            beatSaberReferenceTable.rows = _foundBeatSaberReferences.filter { it.file.path.lowercase().contains(_filterBox.text.lowercase()) }
+            beatSaberReferenceTable.rows = _foundBeatSaberReferences.filter { it.file.path.lowercase().contains(_searchBox.text.lowercase()) }
             beatSaberReferenceTable.fireTableDataChanged()
         }
 
@@ -96,7 +95,7 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
 //        _beatSaberReferences.preferredScrollableViewportSize = _beatSaberReferences.preferredScrollableViewportSize
 
         val panel = FormBuilder.createFormBuilder()
-            .addComponent(_filterBox)
+            .addComponent(_searchBox)
             .addComponent(_parentDirectoryCheckbox)
             .addLabeledComponentFillVertically("BeatSaber references", _beatSaberReferencesScrollPane)
 //            .addComponentFillVertically(JPanel(GridLayout()), 0)
@@ -109,7 +108,7 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
     }
 
     override fun getPreferredFocusedComponent(): JComponent? {
-        return _filterBox
+        return _searchBox
     }
 
     override fun doOKAction() {
