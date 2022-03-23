@@ -8,7 +8,7 @@
 Hopefully this will soon be complete enough to go in alpha or beta in the near future.
 
 ## Targetting:
-Rider 2022.1-EAP3
+Rider 2022.1-EAP7
 
 ## Done:
 - BSIPA Plugin template
