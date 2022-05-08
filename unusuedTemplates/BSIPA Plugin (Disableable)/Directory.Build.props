@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- This file contains project properties used by the build. -->
+<Project>
+  <!-- Manifest -->
+  <PropertyGroup>
+    <AssemblyName>$safeprojectname$</AssemblyName>
+    <Authors>$ModAuthor$</Authors>
+    <Version>$ModVersion$</Version>
+    <GameVersion>$BSVer$</GameVersion>
+    <Description>$ModDesc$</Description>
+    <ProjectHome>$ProjectHome$</ProjectHome>
+    <ProjectSource>$ProjectSource$</ProjectSource>
+    <Donate>$DonateURL$</Donate>
+  </PropertyGroup>
+  <ItemGroup>
+    <Dependency Include="BSIPA" Version="^4.1.3" />
+  </ItemGroup>
+  <!-- End Manifest -->
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <DisableCopyToPlugins>true</DisableCopyToPlugins>
+    <DisableZipRelease>true</DisableZipRelease>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
+  </ItemGroup>
+  <PropertyGroup Condition="'$(NCrunch)' == '1'">
+    <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
+    <DisableCopyToPlugins>true</DisableCopyToPlugins>
+    <DisableZipRelease>true</DisableZipRelease>
+  </PropertyGroup>
+</Project>

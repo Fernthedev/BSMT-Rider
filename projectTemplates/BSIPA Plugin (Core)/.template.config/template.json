@@ -1,13 +1,13 @@
 {
   "$schema": "http://json.schemastore.org/template",
-  "author": "Zingabopp & Fernthedev",
-  "name": "BSIPA4 Plugin (Core)",
+  "author": "Zingabopp",
+  "name": "BSIPA4 Plugin (Core Project)",
   "description": "A basic template for a new Beat Saber IPA plugin.",
   "defaultName": "BSPlugin",
-  "classifications": ["Common", "Library", "BSMT", "games"],
-  "identity": "BSMT_Rider",
-  "groupIdentity": "Fernthedev.BSMT",
-  "shortName": "bsplugin",
+  "classifications": ["Common", "Library", "BSMT", "Games"],
+  "identity": "bsipa_plugin_core",
+  "groupIdentity": "UnityModdingTools.Templates.BeatSaber",
+  "shortName": "bsipa_plugin_core",
   "tags": {
     "type": "project",
     "language": "C#",
@@ -16,23 +16,17 @@
   "sourceName": "$safeprojectname$",
   "preferNameDirectory": true,
   "guids": [
-    "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"
+    "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF",
+    "FDD1EB88-E09B-4A1A-8269-1DA738930B5B"
   ],
   "symbols": {
     "Framework": {
       "type": "parameter",
       "description": "The target framework for the project.",
       "datatype": "text",
-      "replaces": "4.7.2",
+      "replaces": "v$targetframeworkversion$",
       "isRequired": true,
       "defaultValue": "<FullTargetFramework>"
-    },
-    "PathToBeatSaber": {
-      "type": "parameter",
-      "description": "Path to BeatSaber directory. May require a \\ at the end",
-      "datatype": "text",
-      "isRequired": true,
-      "replaces": "$SomeBeatSaberDir$"
     },
     "ModVersion": {
       "type": "parameter",
@@ -64,7 +58,7 @@
       "description": "Beat Saber Version",
       "datatype": "text",
       "replaces": "$BSVer$",
-      "defaultValue": "1.14.0"
+      "defaultValue": "1.16.4"
     },
     "ProjectHome": {
       "type": "parameter",
@@ -89,17 +83,25 @@
     }
   },
   "primaryOutputs": [
-    { "path": "$safeprojectname$Controller.cs" },
-    { "path": "PluginConfig.cs" },
+    { "path": "Configuration/PluginConfig.cs" },
     { "path": "Plugin.cs" },
     { "path": "$safeprojectname$.csproj" },
-    { "path": "$safeprojectname$.csproj.user" }
+    { "path": "$safeprojectname$.csproj.user" },
+    { "path": "Directory.Build.props" },
+    { "path": "Properties/AssemblyInfo.cs" },
+    { "path": "manifest.json" }
   ],
   "sources": [
     {
       "modifiers": [
         {
           "include": "*.csproj.user"
+        },
+        {
+          "rename": {
+            "Directory.Build.props.template": "Directory.Build.props",
+            "AssemblyInfo.cs": "Properties/AssemblyInfo.cs"
+          }
         }
       ]
     }

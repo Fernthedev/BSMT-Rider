@@ -1,13 +1,13 @@
 {
   "$schema": "http://json.schemastore.org/template",
-  "author": "Raine",
-  "name": "BSIPA4 Plugin (Barebones Zenject Project)",
-  "description": "A basic template for a new Beat Saber IPA plugin.",
+  "author": "Zingabopp",
+  "name": "BSIPA4 Plugin (Disableable Project)",
+  "description": "A template for a Beat Saber IPA plugin that can be enabled/disabled while the game is running.",
   "defaultName": "BSPlugin",
-  "classifications": ["Common", "Library", "BSMT", "games"],
-  "identity": "BSMT_Rider",
-  "groupIdentity": "Fernthedev.BSMT",
-  "shortName": "bspluginZenject",
+  "classifications": ["Common", "Library", "BSMT", "Games"],
+  "identity": "bsipa_plugin_disableable",
+  "groupIdentity": "UnityModdingTools.Templates.BeatSaber",
+  "shortName": "bsipa_plugin_disableable",
   "tags": {
     "type": "project",
     "language": "C#",
@@ -16,14 +16,15 @@
   "sourceName": "$safeprojectname$",
   "preferNameDirectory": true,
   "guids": [
-    "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"
+    "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF",
+    "F87FD4E5-9CC9-4E02-B5BF-E8E65665375F"
   ],
   "symbols": {
     "Framework": {
       "type": "parameter",
       "description": "The target framework for the project.",
       "datatype": "text",
-      "replaces": "4.7.2",
+      "replaces": "v$targetframeworkversion$",
       "isRequired": true,
       "defaultValue": "<FullTargetFramework>"
     },
@@ -61,45 +62,48 @@
     },
     "ProjectHome": {
       "type": "parameter",
-      "description": "Beat Saber Version",
+      "description": "Project Home URL",
       "datatype": "text",
       "replaces": "$ProjectHome$",
       "defaultValue": ""
     },
     "ProjectSource": {
       "type": "parameter",
-      "description": "Beat Saber Version",
+      "description": "Project Source URL",
       "datatype": "text",
       "replaces": "$ProjectSource$",
       "defaultValue": ""
     },
     "DonateURL": {
       "type": "parameter",
-      "description": "Beat Saber Version",
+      "description": "Donate URL",
       "datatype": "text",
       "replaces": "$DonateURL$",
       "defaultValue": ""
     }
   },
   "primaryOutputs": [
-    { "path": "FlowCoordinators/$safeprojectname$FlowCoordinator.cs" },
     { "path": "Configuration/PluginConfig.cs" },
-    { "path": "UI/ViewControllers/$safeprojectname$Controller.cs" },
-    { "path": "UI/BSML/$safeprojectname$View.bsml" },
-    { "path": "UI/$safeprojectname$View.cs" },
-    { "path": "Installers/$safeprojectname$MenuInstaller.cs" },
-    { "path": "Installers/$safeprojectname$GameInstaller.cs" },
-    { "path": "Installers/$safeprojectname$AppInstaller.cs" },
-    { "path": "Managers/$safeprojectname$Manager.cs" },
     { "path": "Plugin.cs" },
     { "path": "$safeprojectname$.csproj" },
-    { "path": "$safeprojectname$.csproj.user" }
+    { "path": "$safeprojectname$.csproj.user" },
+    { "path": "Directory.Build.props" },
+    { "path": "Properties/AssemblyInfo.cs" },
+    { "path": "manifest.json" },
+    { "path": "$safeprojectname$Controller.cs"}
   ],
   "sources": [
     {
       "modifiers": [
         {
           "include": "*.csproj.user"
+        },
+        {
+          "rename": {
+            "Directory.Build.props.template": "Directory.Build.props",
+            "AssemblyInfo.cs": "Properties/AssemblyInfo.cs",
+            "MonobehaviourTemplate.cs": "$safeprojectname$Controller.cs"
+          }
         }
       ]
     }

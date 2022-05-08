@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
 	<Target Name="CopyToOutput" AfterTargets="Build" >
 		<Copy SourceFiles="$(TargetDir)ProjectTemplates\CSharp\1033\$(TargetName).zip"
 			  DestinationFiles="$(SolutionDir)Output\$(TargetName).zip" />
