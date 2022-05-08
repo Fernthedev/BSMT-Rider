@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <SdkVersion>2021.3.0</SdkVersion>
+    <SdkVersion>2022.1.1</SdkVersion>
 
     <Title>BSMT-Rider</Title>
     <Description>BSMT Esxtension for Rider</Description>
