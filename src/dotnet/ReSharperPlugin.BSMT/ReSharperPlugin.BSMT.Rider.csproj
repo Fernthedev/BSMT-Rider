@@ -27,7 +27,7 @@
     <ItemGroup>
         <PackageReference Include="JetBrains.Rider.SDK" Version="$(SdkVersion)" />
         <!-- https://www.nuget.org/packages/JetBrains.Rider.Rider.Backend -->
-        <PackageReference Include="JetBrains.Rider.Rider.Backend" Version="213.0.20211207.80411" />
+        <PackageReference Include="JetBrains.Rider.Rider.Backend" Version="221.0.20220428.100419" />
     </ItemGroup>
 
     <!-- TODO: uncomment for xaml icons -->
