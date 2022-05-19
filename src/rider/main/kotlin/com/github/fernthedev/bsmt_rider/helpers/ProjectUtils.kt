@@ -6,10 +6,11 @@ import com.fasterxml.jackson.dataformat.xml.XmlFactory
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.dataformat.xml.util.DefaultXmlPrettyPrinter
 import com.github.fernthedev.bsmt_rider.BeatSaberFolders
-import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.invokeLater
+import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
-import com.jetbrains.rd.platform.util.application
+import com.intellij.util.application
 import com.jetbrains.rider.model.ReloadCommand
 import com.jetbrains.rider.model.UnloadCommand
 import com.jetbrains.rider.model.projectModelTasks
@@ -35,13 +36,11 @@ object ProjectUtils {
             // We do this to force ordering
             // In other words, force it to refresh AFTER writing is done
             // I'm not proud of this ugly code nesting at all nor hard coding this
-            ApplicationManager.getApplication().invokeLaterOnWriteThread {
-                ApplicationManager.getApplication().runWriteAction {
-                    ApplicationManager.getApplication().invokeLater {
-                        val projects = folders.map { it.project }
+            invokeLater {
+                runWriteAction {
+                    val projects = folders.map { it.project }
 
-                        refreshProjectManually(project, projects, filesToRefresh)
-                    }
+                    refreshProjectManually(project, projects, filesToRefresh)
                 }
             }
         }
