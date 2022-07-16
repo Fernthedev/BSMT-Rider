@@ -13,14 +13,14 @@ namespace ReSharperPlugin.BSMT_Rider
     {
         public BSMT_RiderModel BsmtRiderModel { get; private set; }
 
-        public ProjectProtocolHandler(Lifetime lifetime, IProtocol protocol, ILogger logger)
-        {
-            logger.Log(LoggingLevel.INFO,$"{protocol.Name} is protocol");
-            BsmtRiderModel = new BSMT_RiderModel(lifetime, protocol);
-            BSMT_RiderModel.RegisterDeclaredTypesSerializers(protocol.Serializers);
-
-            BsmtRiderModel.FoundBeatSaberLocations
-                .Set((t, _) => RdTask<string[]>.Successful(BeatSaberPathUtils.GetInstallDir().ToArray()));
-        }
+        // public ProjectProtocolHandler(Lifetime lifetime, IProtocol protocol, ILogger logger)
+        // {
+        //     logger.Log(LoggingLevel.INFO,$"{protocol.Name} is protocol");
+        //     BsmtRiderModel = new BSMT_RiderModel(lifetime, protocol);
+        //     BSMT_RiderModel.RegisterDeclaredTypesSerializers(protocol.Serializers);
+        //
+        //     BsmtRiderModel.FoundBeatSaberLocations
+        //         .Set((t, _) => RdTask<string[]>.Successful(BeatSaberPathUtils.GetInstallDir().ToArray()));
+        // }
     }
 }

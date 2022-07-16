@@ -17,7 +17,10 @@ import javax.swing.JComponent
 import javax.swing.table.AbstractTableModel
 
 
-/// $(Beat_Saber_Path)\Beat Saber_Data\Managed
+/**
+TODO: [com.jetbrains.rider.projectView.actions.references.dialog.AddReferenceDialog] class
+/ $(Beat_Saber_Path)\Beat Saber_Data\Managed
+*/
 @OptIn(ExperimentalStdlibApi::class)
 class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String>, existingReferences: List<ReferenceXML>) : DialogWrapper(project) {
     private val _foundBeatSaberReferences: List<BeatSaberReferencePair>

@@ -13,7 +13,7 @@ class BeatSaberReferenceGeneratorAction : BeatSaberProjectAction() {
         val project = e.getData(CommonDataKeys.PROJECT)
 
         if (project != null && e.presentation.isEnabledAndVisible && findProjects != null) {
-            runBackgroundableTask("Adding to Beat Saber References", project) {
+            runBackgroundableTask("Creating harmony patch", project) {
                 BeatSaberReferenceManager.askToAddReferences(project)
             }
         }
