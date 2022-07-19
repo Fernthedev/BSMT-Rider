@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
-    <LangVersion>9</LangVersion>
+    <LangVersion>default</LangVersion>
     <RootNamespace>ReSharperPlugin.BSMT</RootNamespace>
     <Nullable>enable</Nullable>
   </PropertyGroup>
