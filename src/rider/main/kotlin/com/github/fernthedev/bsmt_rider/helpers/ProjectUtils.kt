@@ -79,7 +79,7 @@ object ProjectUtils {
 
         // We do the same here sadly
         val command2 =
-            ReloadCommand(projectIds.toList())
+            ReloadCommand(projectIds.toList(), withDependencies = true, onlyUnloaded = false);
 
         project.solution.projectModelTasks.reloadProjects.runUnderProgress(
             command2,
