@@ -1,26 +1,27 @@
 using JetBrains.Application;
 using JetBrains.Diagnostics;
 using JetBrains.Lifetimes;
+using JetBrains.Platform.RdFramework.Impl;
 using JetBrains.Rd;
 using JetBrains.Rd.Tasks;
 using JetBrains.Util;
+using ReSharperPlugin.BSMT_Rider;
 using ReSharperPlugin.BSMT_Rider.Rider.Model;
 
-namespace ReSharperPlugin.BSMT_Rider
+namespace ReSharperPlugin.BSMT.Rider;
+
+[ShellComponent]
+public class ProjectProtocolHandler
 {
-    [ShellComponent]
-    public class ProjectProtocolHandler
+    public BSMT_RiderModel BsmtRiderModel { get; private set; }
+
+    public ProjectProtocolHandler(Lifetime lifetime, IProtocol protocol, ILogger logger)
     {
-        public BSMT_RiderModel BsmtRiderModel { get; private set; }
+        logger.Log(LoggingLevel.INFO,$"{protocol.Name} is protocol");
+        BsmtRiderModel = new BSMT_RiderModel(lifetime, protocol);
+        BSMT_RiderModel.RegisterDeclaredTypesSerializers(protocol.Serializers);
 
-        public ProjectProtocolHandler(Lifetime lifetime, IProtocol protocol, ILogger logger)
-        {
-            logger.Log(LoggingLevel.INFO,$"{protocol.Name} is protocol");
-            BsmtRiderModel = new BSMT_RiderModel(lifetime, protocol);
-            BSMT_RiderModel.RegisterDeclaredTypesSerializers(protocol.Serializers);
-
-            BsmtRiderModel.FoundBeatSaberLocations
-                .Set((t, _) => RdTask<string[]>.Successful(BeatSaberPathUtils.GetInstallDir().ToArray()));
-        }
+        BsmtRiderModel.FoundBeatSaberLocations
+            .Set((t, _) => RdTask<string[]>.Successful(BeatSaberPathUtils.GetInstallDir().ToArray()));
     }
 }

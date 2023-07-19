@@ -34,7 +34,7 @@ abstract class BeatSaberProjectAction : AnAction() {
         var enabled = e.presentation.isVisible
 
         // Avoid locking the UI thread
-        ReadAction.nonBlocking {
+        ReadAction.nonBlocking<Unit> {
             enabled = enabled &&
                     !findProjects.isNullOrEmpty() && BeatSaberUtils.locateBeatSaberProjects(
                 findProjects

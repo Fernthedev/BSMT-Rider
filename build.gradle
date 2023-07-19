@@ -3,10 +3,10 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.7.0'
-    id 'org.jetbrains.intellij' version '1.13.3' // https://github.com/JetBrains/gradle-intellij-plugin/releases
-    id 'com.jetbrains.rdgen' version '2023.1.1' // https://github.com/JetBrains/rd/releases
-    id 'me.filippov.gradle.jvm.wrapper' version '0.10.0'
+    id 'org.jetbrains.kotlin.jvm' version '1.8.10'
+    id 'org.jetbrains.intellij' version '1.15.+' // https://github.com/JetBrains/gradle-intellij-plugin/releases
+    id 'com.jetbrains.rdgen' version '2023.2.3' // https://github.com/JetBrains/rd/releases
+    id 'me.filippov.gradle.jvm.wrapper' version '0.14.0'
 }
 
 ext {
@@ -23,17 +23,22 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.2'
-    implementation 'com.fasterxml.woodstox:woodstox-core:6.2.8'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.+'
+    implementation 'com.fasterxml.woodstox:woodstox-core:6.2.+'
 }
 
 wrapper {
-    gradleVersion = '7.3'
+    gradleVersion = '7.6'
     distributionType = Wrapper.DistributionType.ALL
     distributionUrl = "https://cache-redirector.jetbrains.com/services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
+
 sourceCompatibility = targetCompatibility = '17'
 version = ext.PluginVersion
+
+tasks.named("processResources") {
+    from("dependencies.json", { into "META-INF" })
+}
 
 sourceSets {
     main {
@@ -48,22 +53,26 @@ compileKotlin {
 
 task setBuildTool {
     doLast {
-        ext.args = []
-        ByteArrayOutputStream stdout = new ByteArrayOutputStream()
+        ext.executable = "dotnet"
+        ext.args = ["msbuild"]
+
         if (isWindows) {
+            ByteArrayOutputStream stdout = new ByteArrayOutputStream()
             exec {
                 executable "${rootDir}\\tools\\vswhere.exe"
                 args '-latest','-property','installationPath','-products','*'
                 standardOutput = stdout
                 workingDir rootDir
             }
-            List<String> files = new FileNameFinder().getFileNames("${stdout.toString().trim()}\\MSBuild", "**/MSBuild.exe")
-            ext.executable = files.get(0)
-            ext.args << "/v:minimal"
-        } else {
-            ext.executable = "dotnet"
-            ext.args << "msbuild"
+
+            def directory = stdout.toString().trim()
+            if (directory) {
+                List<String> files = new FileNameFinder().getFileNames("${directory}\\MSBuild", "**/MSBuild.exe")
+                ext.executable = files.get(0)
+                ext.args = ["/v:minimal"]
+            }
         }
+
         ext.args << "${DotnetSolution}"
         ext.args << "/p:Configuration=${BuildConfiguration}"
         ext.args << "/p:HostFullIdentifier="
