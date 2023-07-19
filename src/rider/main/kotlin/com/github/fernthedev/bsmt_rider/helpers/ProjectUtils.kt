@@ -6,7 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlFactory
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.dataformat.xml.util.DefaultXmlPrettyPrinter
 import com.github.fernthedev.bsmt_rider.BeatSaberFolders
-import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
@@ -64,9 +64,10 @@ object ProjectUtils {
 
 
         // run on dispatch thread
-        ApplicationManager.getApplication().invokeAndWait {
+        invokeAndWaitIfNeeded {
             application.saveAll()
         }
+
         val command =
             UnloadCommand(projectIds.toList())
 

@@ -19,7 +19,11 @@ import javax.swing.table.AbstractTableModel
 
 /// $(Beat_Saber_Path)\Beat Saber_Data\Managed
 @OptIn(ExperimentalStdlibApi::class)
-class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String>, existingReferences: List<ReferenceXML>) : DialogWrapper(project) {
+class BeatSaberReferencesDialogue(
+    project: Project?,
+    beatSaberPath: Array<String>,
+    existingReferences: List<ReferenceXML>
+) : DialogWrapper(project) {
     private val _foundBeatSaberReferences: List<BeatSaberReferencePair>
 
     val references = ArrayList<File>()
@@ -35,8 +39,8 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
         if (beatSaberFolders.isEmpty())
             throw IllegalArgumentException("Beat saber folders are empty or not found!")
 
-        val existingReferencesMatch = existingReferences.map {
-                ref -> PathUtil.getFileName(ref.stringHintPath)
+        val existingReferencesMatch = existingReferences.map { ref ->
+            PathUtil.getFileName(ref.stringHintPath)
         }
 
 
@@ -59,14 +63,16 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
 
         title = "Beat Saber Reference Manager"
 
-        _beatSaberReferences = JBTable(BeatSaberReferenceTable(_foundBeatSaberReferences, _parentDirectoryCheckbox.isSelected))
+        _beatSaberReferences =
+            JBTable(BeatSaberReferenceTable(_foundBeatSaberReferences, _parentDirectoryCheckbox.isSelected))
         _beatSaberReferences.setShowColumns(true)
 
         _beatSaberReferencesScrollPane = JBScrollPane(_beatSaberReferences)
 
         _searchBox.textEditor.addCaretListener {
             val beatSaberReferenceTable = _beatSaberReferences.model as BeatSaberReferenceTable
-            beatSaberReferenceTable.rows = _foundBeatSaberReferences.filter { it.file.path.lowercase().contains(_searchBox.text.lowercase()) }
+            beatSaberReferenceTable.rows =
+                _foundBeatSaberReferences.filter { it.file.path.lowercase().contains(_searchBox.text.lowercase()) }
             beatSaberReferenceTable.fireTableDataChanged()
         }
 
@@ -111,7 +117,7 @@ class BeatSaberReferencesDialogue(project: Project?, beatSaberPath: Array<String
     override fun doOKAction() {
         val model = _beatSaberReferences.model
 
-        for  (i in 0 until model.rowCount) {
+        for (i in 0 until model.rowCount) {
 
             val pair = model.getValueAt(i, -1) as BeatSaberReferencePair
 
@@ -139,7 +145,8 @@ data class BeatSaberReferencePair(
 )
 
 
-class BeatSaberReferenceTable(files: List<BeatSaberReferencePair>, var showParentFolder: Boolean) : AbstractTableModel() {
+class BeatSaberReferenceTable(files: List<BeatSaberReferencePair>, var showParentFolder: Boolean) :
+    AbstractTableModel() {
     private val columns: Array<ColumnEnum> = arrayOf(ColumnEnum.INCLUDE, ColumnEnum.REFERENCE)
 
     var rows: List<BeatSaberReferencePair> = ArrayList(files)
@@ -221,8 +228,9 @@ class BeatSaberReferenceTable(files: List<BeatSaberReferencePair>, var showParen
             -1 -> pair
             0 -> pair.included
             1 ->
-                if(showParentFolder) "${pair.file.parentFile.name}/${pair.file.nameWithoutExtension}"
+                if (showParentFolder) "${pair.file.parentFile.name}/${pair.file.nameWithoutExtension}"
                 else pair.file.nameWithoutExtension
+
             else -> null
         }
     }
@@ -243,7 +251,6 @@ class BeatSaberReferenceTable(files: List<BeatSaberReferencePair>, var showParen
             0 -> pair.included = aValue as Boolean
         }
     }
-
 
 
 }

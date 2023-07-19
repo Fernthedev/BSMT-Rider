@@ -5,18 +5,16 @@ import com.jetbrains.rider.model.RdCustomLocation
 import com.jetbrains.rider.model.RdProjectDescriptor
 import com.jetbrains.rider.projectView.workspace.ProjectModelEntity
 import java.io.File
-import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.Path
 
 object BeatSaberUtils {
 
-    @OptIn(ExperimentalPathApi::class)
+
     fun getAssembliesOfBeatSaber(beatSaberPath: String): String = Path(beatSaberPath, "Beat Saber_Data", "Managed").toString()
 
-    @OptIn(ExperimentalPathApi::class)
+
     fun getLibsOfBeatSaber(beatSaberPath: String): String = Path(beatSaberPath, "Libs").toString()
 
-    @OptIn(ExperimentalPathApi::class)
     fun getPluginsOfBeatSaber(beatSaberPath: String): String = Path(beatSaberPath, "Plugins").toString()
 
     fun locateBeatSaberProjects(items: List<ProjectModelEntity>?): List<BeatSaberFolders> {

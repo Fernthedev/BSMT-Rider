@@ -5,6 +5,7 @@ import com.github.fernthedev.bsmt_rider.dialogue.BeatSaberReferencesDialogue
 import com.github.fernthedev.bsmt_rider.settings.getBeatSaberSelectedDir
 import com.github.fernthedev.bsmt_rider.xml.ReferenceXML
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.command.WriteCommandAction
@@ -121,6 +122,7 @@ object BeatSaberReferenceManager {
                 null -> {
                     XmlElementFactory.getInstance(project).createTagFromText("<ItemGroup></ItemGroup>")
                 }
+
                 else -> {
                     foundItemGroup
                 }
@@ -141,7 +143,7 @@ object BeatSaberReferenceManager {
         // Open dialog and block until closed
         var refsFromDialogue = ArrayList<File>()
 
-        ApplicationManager.getApplication().invokeAndWait {
+        invokeAndWaitIfNeeded {
             val dialogue = BeatSaberReferencesDialogue(project, arrayOf(managedPath, libsPath, pluginsPath), refs)
 
             if (dialogue.showAndGet()) {
@@ -149,24 +151,25 @@ object BeatSaberReferenceManager {
             }
         }
 
-        if (refsFromDialogue.isNotEmpty()) {
-            val pathWithOSSeparator = path.replace('/', File.separatorChar)
-            val xmlRefsFromDialogue = refsFromDialogue.map {
-                val hintPath = it.absolutePath.replace(pathWithOSSeparator, "\$(BeatSaberDir)")
-                val private = false // TODO: should this be configurable?
 
-                ReferenceXML(hintPath, private)
-            }
+        if (refsFromDialogue.isEmpty()) return
 
-            writeReferences(
-                csprojFile,
-                itemGroup,
-                csprojFileXML.document?.rootTag!!,
-                xmlRefsFromDialogue,
-                project,
-                projectData
-            )
+        val pathWithOSSeparator = path.replace('/', File.separatorChar)
+        val xmlRefsFromDialogue = refsFromDialogue.map {
+            val hintPath = it.absolutePath.replace(pathWithOSSeparator, "\$(BeatSaberDir)")
+            val private = false // TODO: should this be configurable?
+
+            ReferenceXML(hintPath, private)
         }
+
+        writeReferences(
+            csprojFile,
+            itemGroup,
+            csprojFileXML.document?.rootTag!!,
+            xmlRefsFromDialogue,
+            project,
+            projectData
+        )
     }
 }
 

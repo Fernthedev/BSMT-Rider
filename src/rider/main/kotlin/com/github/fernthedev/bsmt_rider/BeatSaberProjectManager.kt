@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.fernthedev.bsmt_rider.helpers.BeatSaberUtils
 import com.github.fernthedev.bsmt_rider.helpers.ProjectUtils
+import com.github.fernthedev.bsmt_rider.helpers.runReadActionSafely
 import com.github.fernthedev.bsmt_rider.settings.AppSettingsState
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.jetbrains.rider.projectView.workspace.ProjectModelEntity
@@ -27,8 +27,6 @@ object BeatSaberProjectManager {
     }
 
 
-
-
     fun locateFoldersAndGenerate(items: List<ProjectModelEntity>?, project: Project?, generate: Boolean) {
         val folders = BeatSaberUtils.locateBeatSaberProjects(items)
         val filesToRefresh: MutableList<File> = mutableListOf()
@@ -39,42 +37,37 @@ object BeatSaberProjectManager {
             selectedBeatSaberFolder[project] = beatSaberFolder
         }
 
-        if (generate) {
-            folders.forEach {
-                if (generateUserFile(it.projectFolder, it.csprojFile, beatSaberFolder)) {
-                    filesToRefresh.add(it.projectFolder)
-                    filesToRefresh.add(it.csprojFile)
-                }
-            }
+        if (!generate) return
 
-            ProjectUtils.refreshProjectWithFiles(folders, filesToRefresh, project)
+        folders.forEach {
+            if (generateUserFile(it.projectFolder, it.csprojFile, beatSaberFolder)) {
+                filesToRefresh.add(it.projectFolder)
+                filesToRefresh.add(it.csprojFile)
+            }
         }
+
+        ProjectUtils.refreshProjectWithFiles(folders, filesToRefresh, project)
     }
 
     private fun generateUserFile(folder: File, csprojFile: File, beatSaberFolder: String): Boolean {
         // Get the folder of the solution, then get the folder of the actual project
         val userFile = File(folder, "${csprojFile.name}.user")
 
-        if (folder.exists() && isBeatSaberProject(csprojFile)) {
-            if (userFile.exists()) {
-                return updateUserFile(userFile, beatSaberFolder)
-            } else {
-                val userString = getBeatSaberFolder()
+        if (!folder.exists() || !isBeatSaberProject(csprojFile)) return false
 
-                if (userString != null) {
-                    val content = generateFileContent(userString)
-
-                    ApplicationManager.getApplication().invokeLaterOnWriteThread {
-                        ApplicationManager.getApplication().runWriteAction {
-                            userFile.createNewFile()
-                            VfsUtil.saveText(VfsUtil.findFileByIoFile(userFile, true)!!, content)
-                        }
-                    }
-                    return true
-                }
-            }
+        if (userFile.exists()) {
+            return updateUserFile(userFile, beatSaberFolder)
         }
-        return false
+
+        val userString = getBeatSaberFolder() ?: return false
+
+        val content = generateFileContent(userString)
+
+        runWriteAction {
+            userFile.createNewFile()
+            VfsUtil.saveText(VfsUtil.findFileByIoFile(userFile, true)!!, content)
+        }
+        return true
     }
 
     // TODO: Make this more performant
@@ -86,20 +79,9 @@ object BeatSaberProjectManager {
 
         var contents = ""
 
-        if (ApplicationManager.getApplication().isDispatchThread) {
-            ApplicationManager.getApplication().runReadAction {
-                contents = VfsUtil.loadText(VfsUtil.findFileByIoFile(file, true)!!)
-            }
-        } else {
-            while (!ProgressManager.getInstance().runInReadActionWithWriteActionPriority({
-                    ProgressManager.checkCanceled()
-                    contents = VfsUtil.loadText(VfsUtil.findFileByIoFile(file, true)!!)
-                }, null)) {
-                // Avoid using resources
-                Thread.yield()
-            }
+        runReadActionSafely {
+            contents = VfsUtil.loadText(VfsUtil.findFileByIoFile(file, true)!!)
         }
-
 
         return contents.contains("IPA.Loader") ||
                 contents.contains("BeatSaberModdingTools.Tasks") ||
@@ -111,20 +93,15 @@ object BeatSaberProjectManager {
     private fun updateUserFile(userCsprojFile: File, beatSaberFolder: String): Boolean {
         val file = VfsUtil.findFileByIoFile(userCsprojFile, true)!!
 
-        var contents = ""
-        while (!ProgressManager.getInstance().runInReadActionWithWriteActionPriority({
-                ProgressManager.checkCanceled()
-                contents = VfsUtil.loadText(file)
-            }, null)) {
-            // Avoid using resources
-            Thread.yield()
+        val contents = runReadActionSafely {
+            VfsUtil.loadText(file)
         }
 
         // Skip if user.csproj already contains reference
         // Replace \ to / allows for paths to be resolved universally
-        if (contents.trimIndent().replace("\\","/").contains(
+        if (contents.trimIndent().replace("\\", "/").contains(
                 """
-                    <BeatSaberDir>${beatSaberFolder.replace("\\","/")}</BeatSaberDir>
+                    <BeatSaberDir>${beatSaberFolder.replace("\\", "/")}</BeatSaberDir>
                     """.trimIndent(),
                 ignoreCase = true
             )
@@ -214,10 +191,8 @@ object BeatSaberProjectManager {
             }
         }
 
-        ApplicationManager.getApplication().invokeLaterOnWriteThread {
-            ApplicationManager.getApplication().runWriteAction {
-                VfsUtil.saveText(file, finalString.toString())
-            }
+        runWriteAction {
+            VfsUtil.saveText(file, finalString.toString())
         }
 
         return true

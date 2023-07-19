@@ -1,7 +1,7 @@
 package com.github.fernthedev.bsmt_rider.settings
 
 import com.github.fernthedev.bsmt_rider.dialogue.BeatSaberChooseDialogue
-import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.State
@@ -30,28 +30,22 @@ class AppSettingsState : PersistentStateComponent<AppSettingsState> {
         val task = fun(): String? {
             val dialogue = BeatSaberChooseDialogue(project)
 
-            if (dialogue.showAndGet()) {
+            if (!dialogue.showAndGet()) return null
 
-                val beatSaberPath = dialogue.beatSaberInput.selectedItem as String
+            val beatSaberPath = dialogue.beatSaberInput.selectedItem as String
 
-                val addToConfig = dialogue.addToConfigCheckbox.isEnabled && dialogue.addToConfigCheckbox.isSelected
-                val makeDefault = dialogue.setAsDefault.isEnabled && dialogue.setAsDefault.isSelected
+            val addToConfig = dialogue.addToConfigCheckbox.isEnabled && dialogue.addToConfigCheckbox.isSelected
+            val makeDefault = dialogue.setAsDefault.isEnabled && dialogue.setAsDefault.isSelected
 
-                addToList(beatSaberPath, addToConfig, makeDefault)
+            addToList(beatSaberPath, addToConfig, makeDefault)
 
-                if (beatSaberPath.isNotEmpty())
-                    return beatSaberPath
-            }
+            if (beatSaberPath.isNotEmpty())
+                return beatSaberPath
 
             return null
         }
 
-        var result: String? = null
-        ApplicationManager.getApplication().invokeAndWait {
-            result = task()
-        }
-
-        return result
+        return invokeAndWaitIfNeeded(runnable = task)
     }
 
     private fun addToList(path: String, addToConfig: Boolean, default: Boolean) {
