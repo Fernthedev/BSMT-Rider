@@ -35,7 +35,7 @@ class BSMT_RiderModel private constructor(
             
             return BSMT_RiderModel().apply {
                 identify(protocol.identity, RdId.Null.mix("BSMT_RiderModel"))
-                bind(lifetime, protocol, "BSMT_RiderModel")
+//                bind(lifetime, protocol, "BSMT_RiderModel")
             }
         }
         

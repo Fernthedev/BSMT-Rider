@@ -4,7 +4,7 @@ import com.github.fernthedev.bsmt_rider.BeatSaberProjectManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.progress.runBackgroundableTask
-import com.intellij.workspaceModel.ide.WorkspaceModel
+import com.intellij.platform.backend.workspace.WorkspaceModel
 import com.jetbrains.rider.projectView.workspace.findProjects
 
 

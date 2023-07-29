@@ -20,7 +20,7 @@ private class RiderProtocolHandler {
 
 
     init {
-        val protocol = ProtocolManager.createProtocol(Lifetime.Eternal)
+        val protocol = ProtocolManager.createProtocol(ApplicationManager.getApplication(), Lifetime.Eternal)
         bsmtRidermodel = BSMT_RiderModel.create(ApplicationManager.getApplication().lifetime, protocol)
 
         ApplicationManager.getApplication().invokeLater {

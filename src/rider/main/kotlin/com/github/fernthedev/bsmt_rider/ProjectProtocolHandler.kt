@@ -3,7 +3,7 @@ package com.github.fernthedev.bsmt_rider
 import com.github.fernthedev.bsmt_rider.settings.AppSettingsState
 import com.intellij.openapi.progress.runBackgroundableTask
 import com.intellij.openapi.project.Project
-import com.intellij.workspaceModel.ide.WorkspaceModel
+import com.intellij.platform.backend.workspace.WorkspaceModel
 import com.jetbrains.rd.platform.util.idea.ProtocolSubscribedProjectComponent
 import com.jetbrains.rd.util.reactive.whenTrue
 import com.jetbrains.rider.projectView.solution
