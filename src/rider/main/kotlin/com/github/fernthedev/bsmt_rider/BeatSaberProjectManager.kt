@@ -5,11 +5,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.fernthedev.bsmt_rider.helpers.BeatSaberUtils
 import com.github.fernthedev.bsmt_rider.helpers.ProjectUtils
 import com.github.fernthedev.bsmt_rider.helpers.runReadActionSafely
+import com.github.fernthedev.bsmt_rider.helpers.runWriteActionSafely
 import com.github.fernthedev.bsmt_rider.settings.AppSettingsState
-import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.jetbrains.rider.projectView.workspace.ProjectModelEntity
+import kotlinx.coroutines.runBlocking
 import java.io.File
 
 
@@ -63,9 +64,11 @@ object BeatSaberProjectManager {
 
         val content = generateFileContent(userString)
 
-        runWriteAction {
-            userFile.createNewFile()
-            VfsUtil.saveText(VfsUtil.findFileByIoFile(userFile, true)!!, content)
+        runBlocking {
+            runWriteActionSafely {
+                userFile.createNewFile()
+                VfsUtil.saveText(VfsUtil.findFileByIoFile(userFile, true)!!, content)
+            }
         }
         return true
     }
@@ -191,7 +194,7 @@ object BeatSaberProjectManager {
             }
         }
 
-        runWriteAction {
+        runWriteActionSafely {
             VfsUtil.saveText(file, finalString.toString())
         }
 

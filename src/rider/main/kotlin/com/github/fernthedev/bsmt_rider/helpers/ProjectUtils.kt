@@ -7,8 +7,6 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.dataformat.xml.util.DefaultXmlPrettyPrinter
 import com.github.fernthedev.bsmt_rider.BeatSaberFolders
 import com.intellij.openapi.application.invokeAndWaitIfNeeded
-import com.intellij.openapi.application.invokeLater
-import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.util.application
@@ -37,12 +35,10 @@ object ProjectUtils {
             // We do this to force ordering
             // In other words, force it to refresh AFTER writing is done
             // I'm not proud of this ugly code nesting at all nor hard coding this
-            invokeLater {
-                runWriteAction {
-                    val projects = folders.map { it.project }
+            runWriteActionSafely {
+                val projects = folders.map { it.project }
 
-                    refreshProjectManually(project, projects, filesToRefresh)
-                }
+                refreshProjectManually(project, projects, filesToRefresh)
             }
         }
     }
