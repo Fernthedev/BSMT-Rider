@@ -61,7 +61,9 @@ object ProjectUtils {
 
         // run on dispatch thread
         invokeAndWaitIfNeeded {
-            application.saveAll()
+            runWriteActionSafely {
+                application.saveAll()
+            }
         }
 
         val command =
