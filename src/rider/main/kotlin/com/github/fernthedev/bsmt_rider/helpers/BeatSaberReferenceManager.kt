@@ -36,7 +36,7 @@ class BeatSaberReferenceManager(
     val scope: CoroutineScope
 ) {
 
-    private fun getReferences(itemGroup: XmlTag): List<ReferenceXML> {
+    private suspend fun getReferences(itemGroup: XmlTag): List<ReferenceXML> {
         val refs = ArrayList<ReferenceXML>()
 
         if (itemGroup.isEmpty)
@@ -44,7 +44,10 @@ class BeatSaberReferenceManager(
 
         itemGroup.subTags.forEach {
             if (it.subTags.isNotEmpty()) {
-                val ref = ProjectUtils.xmlParser.readValue<ReferenceXML>(it.text)
+                val text = readActionBlocking {
+                    it.text
+                }
+                val ref = ProjectUtils.xmlParser.readValue<ReferenceXML>(text)
 
                 refs.add(ref)
             }
