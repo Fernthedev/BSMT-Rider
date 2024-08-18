@@ -1,6 +1,7 @@
 package com.github.fernthedev.bsmt_rider.actions
 
 import com.github.fernthedev.bsmt_rider.helpers.BeatSaberReferenceManager
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.components.service
@@ -26,4 +27,7 @@ class BeatSaberReferenceGeneratorAction : BeatSaberProjectAction() {
     }
 
 
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
+    }
 }

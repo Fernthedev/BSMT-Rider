@@ -2,6 +2,7 @@ package com.github.fernthedev.bsmt_rider.actions
 
 import com.github.fernthedev.bsmt_rider.BeatSaberProjectManager
 import com.github.fernthedev.bsmt_rider.helpers.BeatSaberUtils
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -44,6 +45,10 @@ abstract class BeatSaberProjectAction : AnAction() {
 
             e.presentation.isEnabled = enabled
         }
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
     }
 
 }
