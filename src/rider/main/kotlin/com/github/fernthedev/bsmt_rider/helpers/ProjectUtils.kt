@@ -87,10 +87,13 @@ class ProjectUtils(
                 isCancelable = false,
                 throwFault = false
             )
-
+        }
 
 //        ReloadProjectAction.execute() is the original code
 
+        yieldThroughInvokeLater()
+
+        withContext(Dispatchers.EDT) {
             // We do the same here sadly
             val command2 =
                 ReloadCommand(projectIds.toList(), withDependencies = true, onlyUnloaded = false);
