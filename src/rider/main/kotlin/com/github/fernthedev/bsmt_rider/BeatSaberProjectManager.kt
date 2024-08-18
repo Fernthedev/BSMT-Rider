@@ -4,13 +4,16 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.fernthedev.bsmt_rider.helpers.BeatSaberUtils
 import com.github.fernthedev.bsmt_rider.helpers.ProjectUtils
-import com.github.fernthedev.bsmt_rider.helpers.runReadActionSafely
-import com.github.fernthedev.bsmt_rider.helpers.runWriteActionSafely
 import com.github.fernthedev.bsmt_rider.settings.AppSettingsState
+import com.intellij.openapi.application.readActionBlocking
+import com.intellij.openapi.application.writeAction
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
+import com.jetbrains.cidr.util.checkCanceled
 import com.jetbrains.rider.projectView.workspace.ProjectModelEntity
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
 import java.io.File
 
 
@@ -20,23 +23,20 @@ data class BeatSaberFolders(
     val project: ProjectModelEntity
 )
 
-object BeatSaberProjectManager {
-    private val selectedBeatSaberFolder = HashMap<Project, String?>()
+@Service(Service.Level.PROJECT)
+class BeatSaberProjectManager(
+    val project: Project,
+    val scope: CoroutineScope
+) {
+    var selectedBeatSaberFolder: String? = null
 
-    fun getSelectedBeatSaberFolder(project: Project): String? {
-        return selectedBeatSaberFolder.getOrDefault(project, null)
-    }
-
-
-    fun locateFoldersAndGenerate(items: List<ProjectModelEntity>?, project: Project?, generate: Boolean) {
+    suspend fun locateFoldersAndGenerate(items: List<ProjectModelEntity>?, generate: Boolean) {
         val folders = BeatSaberUtils.locateBeatSaberProjects(items)
         val filesToRefresh: MutableList<File> = mutableListOf()
 
         val beatSaberFolder = getBeatSaberFolder() ?: return
 
-        if (project != null) {
-            selectedBeatSaberFolder[project] = beatSaberFolder
-        }
+        selectedBeatSaberFolder = beatSaberFolder
 
         if (!generate) return
 
@@ -47,10 +47,10 @@ object BeatSaberProjectManager {
             }
         }
 
-        ProjectUtils.refreshProjectWithFiles(folders, filesToRefresh, project)
+        project.service<ProjectUtils>().refreshProjectWithFiles(folders, filesToRefresh)
     }
 
-    private fun generateUserFile(folder: File, csprojFile: File, beatSaberFolder: String): Boolean {
+    private suspend fun generateUserFile(folder: File, csprojFile: File, beatSaberFolder: String): Boolean {
         // Get the folder of the solution, then get the folder of the actual project
         val userFile = File(folder, "${csprojFile.name}.user")
 
@@ -64,26 +64,29 @@ object BeatSaberProjectManager {
 
         val content = generateFileContent(userString)
 
-        runBlocking {
-            runWriteActionSafely {
-                userFile.createNewFile()
-                VfsUtil.saveText(VfsUtil.findFileByIoFile(userFile, true)!!, content)
-            }
+
+        writeAction {
+            checkCanceled()
+            userFile.createNewFile()
+            VfsUtil.saveText(VfsUtil.findFileByIoFile(userFile, true)!!, content)
         }
+
         return true
     }
 
-    // TODO: Make this more performant
-    // TODO: Make this a coroutine?
-    fun isBeatSaberProject(file: File?): Boolean {
+    suspend fun isBeatSaberProject(file: File?): Boolean {
         if (file == null) return false
 
         if (!file.exists()) return false
 
-        var contents = ""
+        val vfsFile = readActionBlocking {
+            checkCanceled()
+            VfsUtil.findFileByIoFile(file, true)!!
+        }
 
-        runReadActionSafely {
-            contents = VfsUtil.loadText(VfsUtil.findFileByIoFile(file, true)!!)
+        val contents = readActionBlocking {
+            checkCanceled()
+            VfsUtil.loadText(vfsFile)
         }
 
         return contents.contains("IPA.Loader") ||
@@ -93,10 +96,11 @@ object BeatSaberProjectManager {
 
     // TODO: Clean this up using POJO if possible.
     // This merges the previous XML data with the new one
-    private fun updateUserFile(userCsprojFile: File, beatSaberFolder: String): Boolean {
+    private suspend fun updateUserFile(userCsprojFile: File, beatSaberFolder: String): Boolean {
         val file = VfsUtil.findFileByIoFile(userCsprojFile, true)!!
 
-        val contents = runReadActionSafely {
+        val contents = readActionBlocking {
+            checkCanceled()
             VfsUtil.loadText(file)
         }
 
@@ -194,15 +198,16 @@ object BeatSaberProjectManager {
             }
         }
 
-        runWriteActionSafely {
+        writeAction {
+            checkCanceled()
             VfsUtil.saveText(file, finalString.toString())
         }
 
         return true
     }
 
-    private fun getBeatSaberFolder(project: Project? = null): String? {
-        return AppSettingsState.instance.getBeatSaberDir(project)
+    private suspend  fun getBeatSaberFolder(): String? {
+        return AppSettingsState.instance.getBeatSaberInstallationDir(project)
     }
 
     private fun generateFileContent(beatSaberFolder: String): String {

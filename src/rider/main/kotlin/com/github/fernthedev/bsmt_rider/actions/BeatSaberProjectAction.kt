@@ -5,12 +5,12 @@ import com.github.fernthedev.bsmt_rider.helpers.BeatSaberUtils
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.application.ModalityState
-import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.components.service
 import com.intellij.platform.backend.workspace.WorkspaceModel
 import com.jetbrains.rider.projectView.hasSolution
 import com.jetbrains.rider.projectView.workspace.ProjectModelEntity
 import com.jetbrains.rider.projectView.workspace.findProjects
+import kotlinx.coroutines.launch
 
 abstract class BeatSaberProjectAction : AnAction() {
 
@@ -21,25 +21,27 @@ abstract class BeatSaberProjectAction : AnAction() {
     override fun update(e: AnActionEvent) {
         val project = e.getData(CommonDataKeys.PROJECT)
 
-
-        findProjects = if (project != null) {
-            WorkspaceModel.getInstance(project).findProjects()
-        } else {
-            null
+        if (project == null) {
+            e.presentation.isEnabledAndVisible = false
+            return
         }
 
+        e.presentation.isEnabledAndVisible = project.hasSolution == true
 
-        e.presentation.isEnabledAndVisible = project?.hasSolution == true
+        findProjects = WorkspaceModel.getInstance(project).findProjects()
+        val beatSaberProjectManager = project.service<BeatSaberProjectManager>()
 
-        var enabled = e.presentation.isVisible
+        beatSaberProjectManager.scope.launch {
+            var enabled =
+                e.presentation.isVisible &&
+                        !findProjects.isNullOrEmpty()
 
-        // Avoid locking the UI thread
-        ReadAction.nonBlocking<Unit> {
-            enabled = enabled &&
-                    !findProjects.isNullOrEmpty() && BeatSaberUtils.locateBeatSaberProjects(
-                findProjects
-            ).any { BeatSaberProjectManager.isBeatSaberProject(it.csprojFile) }
-        }.finishOnUiThread(ModalityState.NON_MODAL) {
+            if (enabled) {
+                enabled = BeatSaberUtils.locateBeatSaberProjects(findProjects).any {
+                    beatSaberProjectManager.isBeatSaberProject(it.csprojFile)
+                }
+            }
+
             e.presentation.isEnabled = enabled
         }
     }

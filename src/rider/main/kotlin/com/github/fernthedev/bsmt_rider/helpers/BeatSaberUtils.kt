@@ -10,7 +10,8 @@ import kotlin.io.path.Path
 object BeatSaberUtils {
 
 
-    fun getAssembliesOfBeatSaber(beatSaberPath: String): String = Path(beatSaberPath, "Beat Saber_Data", "Managed").toString()
+    fun getAssembliesOfBeatSaber(beatSaberPath: String): String =
+        Path(beatSaberPath, "Beat Saber_Data", "Managed").toString()
 
 
     fun getLibsOfBeatSaber(beatSaberPath: String): String = Path(beatSaberPath, "Libs").toString()
@@ -21,23 +22,26 @@ object BeatSaberUtils {
         if (items == null)
             return emptyList()
 
-        val folders = mutableListOf<BeatSaberFolders>()
-        items.forEach { projectData ->
+        val folders = items.mapNotNull { projectData ->
             println("Project: ${projectData.descriptor.name}")
-
-
             val location = projectData.descriptor.location
 
-            if (location is RdCustomLocation && location.customLocation.endsWith(".csproj")
-                && projectData.descriptor is RdProjectDescriptor
-            ) {
-                val projectRdData: RdProjectDescriptor = projectData.descriptor as RdProjectDescriptor
-                val csprojFile = File(location.customLocation)
-
-                val projFolder = File(projectRdData.baseDirectory ?: csprojFile.parent)
-
-                folders.add(BeatSaberFolders(csprojFile, projFolder, projectData))
+            if (location !is RdCustomLocation) {
+                return@mapNotNull null
             }
+            if (!location.customLocation.endsWith(".csproj")) {
+                return@mapNotNull null
+            }
+            if (projectData.descriptor !is RdProjectDescriptor) {
+                return@mapNotNull null
+            }
+
+            val projectRdData: RdProjectDescriptor = projectData.descriptor as RdProjectDescriptor
+            val csprojFile = File(location.customLocation)
+
+            val projFolder = File(projectRdData.baseDirectory ?: csprojFile.parent)
+
+            BeatSaberFolders(csprojFile, projFolder, projectData)
         }
 
         return folders

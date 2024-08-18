@@ -1,13 +1,15 @@
 package com.github.fernthedev.bsmt_rider.settings
 
 import com.github.fernthedev.bsmt_rider.dialogue.BeatSaberChooseDialogue
-import com.intellij.openapi.application.invokeAndWaitIfNeeded
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.project.Project
 import com.intellij.util.xmlb.XmlSerializerUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 
 /**
@@ -22,15 +24,15 @@ class AppSettingsState : PersistentStateComponent<AppSettingsState> {
     var defaultFolder: String? = null
     var refreshOnProjectOpen: Boolean = true
 
-    fun getBeatSaberDir(project: Project?) : String? {
+    suspend fun getBeatSaberInstallationDir(project: Project?) : String? {
         if (useDefaultFolder && defaultFolder != null)
             return defaultFolder!!
 
 
-        val task = fun(): String? {
+        return withContext(Dispatchers.EDT) {
             val dialogue = BeatSaberChooseDialogue(project)
 
-            if (!dialogue.showAndGet()) return null
+            if (!dialogue.showAndGet()) return@withContext null
 
             val beatSaberPath = dialogue.beatSaberInput.selectedItem as String
 
@@ -39,13 +41,12 @@ class AppSettingsState : PersistentStateComponent<AppSettingsState> {
 
             addToList(beatSaberPath, addToConfig, makeDefault)
 
-            if (beatSaberPath.isNotEmpty())
-                return beatSaberPath
+            if (beatSaberPath.isNotEmpty()) {
+                return@withContext beatSaberPath
+            }
 
-            return null
+            return@withContext null
         }
-
-        return invokeAndWaitIfNeeded(runnable = task)
     }
 
     private fun addToList(path: String, addToConfig: Boolean, default: Boolean) {

@@ -7,6 +7,7 @@ import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.progress.ProgressManager
 
 // https://plugins.jetbrains.com/docs/intellij/general-threading-rules.html#read-action-cancellability
+@Deprecated("Use Kotlin coroutines")
 fun <V : Any?> runReadActionSafely(runnable: () -> V): V {
     val canRead =
         ApplicationManager.getApplication().isReadAccessAllowed || ApplicationManager.getApplication().isDispatchThread
@@ -30,6 +31,7 @@ fun <V : Any?> runReadActionSafely(runnable: () -> V): V {
     return late as V
 }
 
+@Deprecated("Use Kotlin coroutines")
 fun runWriteActionSafely(runnable: () -> Unit) {
     if (ApplicationManager.getApplication().isWriteAccessAllowed) {
         runnable();

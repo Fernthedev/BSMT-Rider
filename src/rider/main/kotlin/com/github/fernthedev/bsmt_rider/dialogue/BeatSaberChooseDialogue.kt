@@ -62,7 +62,7 @@ class BeatSaberChooseDialogue(val project: Project?) : DialogWrapper(project) {
 
         val checkIfConfigInputIsValid = fun(): Boolean {
             val inputValue = beatSaberInput.selectedItem as String?
-            return inputValue != null && inputValue.isNotEmpty()
+            return !inputValue.isNullOrEmpty()
         }
 
         val checkIfConfigInputIsNew = fun(): Boolean {

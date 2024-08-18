@@ -6,10 +6,12 @@ import com.fasterxml.jackson.dataformat.xml.XmlFactory
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.dataformat.xml.util.DefaultXmlPrettyPrinter
 import com.github.fernthedev.bsmt_rider.BeatSaberFolders
-import com.intellij.openapi.application.invokeAndWaitIfNeeded
+import com.intellij.ide.SaveAndSyncHandler
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.util.application
+import com.jetbrains.cidr.util.checkCanceled
 import com.jetbrains.rider.model.ReloadCommand
 import com.jetbrains.rider.model.UnloadCommand
 import com.jetbrains.rider.model.projectModelTasks
@@ -18,35 +20,42 @@ import com.jetbrains.rider.projectView.solution
 import com.jetbrains.rider.projectView.workspace.ProjectModelEntity
 import com.jetbrains.rider.projectView.workspace.getId
 import com.jetbrains.rider.util.idea.runUnderProgress
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
-object ProjectUtils {
-    // with Jackson 2.10 and later
-    val xmlParser: XmlMapper =
-        XmlMapper.builder(XmlFactory(WstxInputFactory(), WstxOutputFactory())) // possible configuration changes
-            .defaultPrettyPrinter(DefaultXmlPrettyPrinter())
-            .build()
+@Service(Service.Level.PROJECT)
+class ProjectUtils(
+    val project: Project,
+    private val cs: CoroutineScope
+) {
 
 
-    fun refreshProjectWithFiles(folders: List<BeatSaberFolders>, filesToRefresh: List<File>, project: Project?) {
-        if (filesToRefresh.isNotEmpty() && project != null) {
+    suspend fun refreshProjectWithFiles(
+        folders: List<BeatSaberFolders>,
+        filesToRefresh: List<File>
+    ) {
+        if (filesToRefresh.isNotEmpty()) {
 
             // TODO: Make this only run if a `csproj.user` file has been created or modified, not all the time
             // We do this to force ordering
             // In other words, force it to refresh AFTER writing is done
             // I'm not proud of this ugly code nesting at all nor hard coding this
-            runWriteActionSafely {
-                val projects = folders.map { it.project }
 
-                refreshProjectManually(project, projects, filesToRefresh)
-            }
+            val projectFolders = folders.map { it.project }
+
+            refreshProjectManually(projectFolders, filesToRefresh)
         }
     }
 
     /// We have to hard code UnloadProjectAction.execute it seems unfortunately
     /// This is ugly, maybe find a way to get a component that references the
     // csproj directly so we can use DataContexts?
-    fun refreshProjectManually(project: Project, projects: List<ProjectModelEntity>, filesToRefresh: List<File>) {
+    suspend fun refreshProjectManually(
+        projects: Collection<ProjectModelEntity>,
+        filesToRefresh: List<File>
+    ) {
 
         if (projects.isEmpty())
             return
@@ -60,11 +69,8 @@ object ProjectUtils {
 
 
         // run on dispatch thread
-        invokeAndWaitIfNeeded {
-            runWriteActionSafely {
-                application.saveAll()
-            }
-        }
+
+        service<SaveAndSyncHandler>().scheduleSave(SaveAndSyncHandler.SaveTask())
 
         val command =
             UnloadCommand(projectIds.toList())
@@ -92,7 +98,17 @@ object ProjectUtils {
             throwFault = false,
         )
 
+        withContext(Dispatchers.IO) {
+            checkCanceled()
+            VfsUtil.markDirtyAndRefresh(true, false, false, *filesToRefresh.toTypedArray())
+        }
+    }
 
-        VfsUtil.markDirtyAndRefresh(true, false, false, *filesToRefresh.toTypedArray())
+    companion object {
+        // with Jackson 2.10 and later
+        val xmlParser: XmlMapper =
+            XmlMapper.builder(XmlFactory(WstxInputFactory(), WstxOutputFactory())) // possible configuration changes
+                .defaultPrettyPrinter(DefaultXmlPrettyPrinter())
+                .build()
     }
 }

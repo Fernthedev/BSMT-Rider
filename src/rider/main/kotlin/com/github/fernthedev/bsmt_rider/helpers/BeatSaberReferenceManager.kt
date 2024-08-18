@@ -5,10 +5,10 @@ import com.github.fernthedev.bsmt_rider.dialogue.BeatSaberReferencesDialogue
 import com.github.fernthedev.bsmt_rider.settings.getBeatSaberSelectedDir
 import com.github.fernthedev.bsmt_rider.xml.ReferenceXML
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.invokeAndWaitIfNeeded
-import com.intellij.openapi.application.invokeLater
-import com.intellij.openapi.application.runReadAction
-import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.application.EDT
+import com.intellij.openapi.application.readActionBlocking
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -22,12 +22,18 @@ import com.jetbrains.rider.model.RdCustomLocation
 import com.jetbrains.rider.model.RdProjectDescriptor
 import com.jetbrains.rider.projectView.workspace.ProjectModelEntity
 import com.jetbrains.rider.projectView.workspace.findProjectsByName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
-import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.Path
 import kotlin.io.path.nameWithoutExtension
 
-object BeatSaberReferenceManager {
+@Service(Service.Level.PROJECT)
+class BeatSaberReferenceManager(
+    val project: Project,
+    val scope: CoroutineScope
+) {
 
     private fun getReferences(itemGroup: XmlTag): List<ReferenceXML> {
         val refs = ArrayList<ReferenceXML>()
@@ -39,7 +45,6 @@ object BeatSaberReferenceManager {
             if (it.subTags.isNotEmpty()) {
                 val ref = ProjectUtils.xmlParser.readValue<ReferenceXML>(it.text)
 
-
                 refs.add(ref)
             }
         }
@@ -47,8 +52,8 @@ object BeatSaberReferenceManager {
         return refs
     }
 
-    @OptIn(ExperimentalPathApi::class)
-    private fun writeReferences(
+
+    private suspend fun writeReferences(
         csprojFile: VirtualFile,
         itemGroupParam: XmlTag,
         itemGroupRoot: XmlTag,
@@ -56,48 +61,45 @@ object BeatSaberReferenceManager {
         project: Project,
         projectData: ProjectModelEntity
     ) {
-        invokeLater {
-            WriteCommandAction.runWriteCommandAction(project) {
-                // add to root if not already
-                val itemGroup = when {
-                    itemGroupRoot.subTags.contains(itemGroupParam) -> itemGroupParam
-                    else -> itemGroupRoot.addSubTag(itemGroupParam, false)
-                }
+        // add to root if not already
+        val itemGroup = when {
+            itemGroupRoot.subTags.contains(itemGroupParam) -> itemGroupParam
+            else -> itemGroupRoot.addSubTag(itemGroupParam, false)
+        }
 
-                require(itemGroup.isWritable) { "Cannot write to tag!" }
-                require(itemGroup.containingFile.isWritable) { "Cannot write to file!" }
+        require(itemGroup.isWritable) { "Cannot write to tag!" }
+        require(itemGroup.containingFile.isWritable) { "Cannot write to file!" }
 
 
-                // I hate this
-                refsToAdd.forEach { ref ->
-                    val tag =
-                        itemGroup.createChildTag("Reference", null, ref.toXMLNoRoot().replace("\r\n", "\n"), false);
+        // I hate this
+        refsToAdd.forEach { ref ->
+            val tag =
+                itemGroup.createChildTag("Reference", null, ref.toXMLNoRoot().replace("\r\n", "\n"), false);
 
-                    val includeName = Path(ref.stringHintPath).nameWithoutExtension
+            val includeName = Path(ref.stringHintPath).nameWithoutExtension
 
-                    val include = includeName.replace("\r\n", "\n")
-                    tag.setAttribute("Include", include)
+            val include = includeName.replace("\r\n", "\n")
+            tag.setAttribute("Include", include)
 
-                    var added = false
-                    for (subTag in itemGroup.subTags) {
-                        val nextInclude = subTag.getAttributeValue("Include")
-                        if (nextInclude != null && nextInclude > include) {
-                            itemGroup.addBefore(tag, subTag)
-                            added = true
-                            break
-                        }
-                    }
-                    if (!added) {
-                        itemGroup.addSubTag(tag, false)
-                    }
+            var added = false
+            for (subTag in itemGroup.subTags) {
+                val nextInclude = subTag.getAttributeValue("Include")
+                if (nextInclude != null && nextInclude > include) {
+                    itemGroup.addBefore(tag, subTag)
+                    added = true
+                    break
                 }
             }
-
-            ProjectUtils.refreshProjectManually(project, listOf(projectData), listOf(csprojFile.toIOFile()))
+            if (!added) {
+                itemGroup.addSubTag(tag, false)
+            }
         }
+
+        project.service<ProjectUtils>().refreshProjectManually(listOf(projectData), listOf(csprojFile.toIOFile()))
+
     }
 
-    fun askToAddReferences(project: Project) {
+    suspend fun askToAddReferences() {
         require(!ApplicationManager.getApplication().isDispatchThread)
 
         val projectData: ProjectModelEntity =
@@ -107,17 +109,14 @@ object BeatSaberReferenceManager {
 
         val csprojFile: VirtualFile = VfsUtil.findFileByIoFile(File(projectLocation.customLocation), true)!!
 
-        lateinit var csprojFileXML: XmlFile
-        lateinit var itemGroup: XmlTag
-        lateinit var refs: List<ReferenceXML>
 
-        // Read file
-        runReadAction {
+
+        val (csprojFileXML, itemGroup, refs) = readActionBlocking {
             // I hate PSI
-            csprojFileXML = PsiManager.getInstance(project).findFile(csprojFile) as XmlFile
+            val csprojFileXML = PsiManager.getInstance(project).findFile(csprojFile) as XmlFile
             val groups = csprojFileXML.document?.rootTag?.findSubTags("ItemGroup")
 
-            itemGroup = when (val foundItemGroup =
+            val itemGroup = when (val foundItemGroup =
                 groups?.firstOrNull { itemGroup -> itemGroup.subTags.any { it.name == "Reference" } }) {
                 null -> {
                     XmlElementFactory.getInstance(project).createTagFromText("<ItemGroup></ItemGroup>")
@@ -128,7 +127,7 @@ object BeatSaberReferenceManager {
                 }
             }
 
-            refs = getReferences(itemGroup)
+            Triple(csprojFileXML, itemGroup, getReferences(itemGroup))
         }
 
         // Find beat saber dir
@@ -141,18 +140,17 @@ object BeatSaberReferenceManager {
         val pluginsPath = BeatSaberUtils.getPluginsOfBeatSaber(path)
 
         // Open dialog and block until closed
-        var refsFromDialogue = ArrayList<File>()
-
-        invokeAndWaitIfNeeded {
+        val refsFromDialogue = withContext(Dispatchers.EDT) {
             val dialogue = BeatSaberReferencesDialogue(project, arrayOf(managedPath, libsPath, pluginsPath), refs)
 
             if (dialogue.showAndGet()) {
-                refsFromDialogue = dialogue.references
+                dialogue.references
+            } else {
+                null
             }
         }
 
-
-        if (refsFromDialogue.isEmpty()) return
+        if (refsFromDialogue.isNullOrEmpty()) return
 
         val pathWithOSSeparator = path.replace('/', File.separatorChar)
         val xmlRefsFromDialogue = refsFromDialogue.map {
