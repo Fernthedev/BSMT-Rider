@@ -6,8 +6,9 @@ import com.github.fernthedev.bsmt_rider.settings.getBeatSaberSelectedDir
 import com.github.fernthedev.bsmt_rider.xml.ReferenceXML
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.readActionBlocking
-import com.intellij.openapi.application.writeAction
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -32,24 +33,24 @@ import kotlin.io.path.nameWithoutExtension
 
 @Service(Service.Level.PROJECT)
 class BeatSaberReferenceManager(
-    val project: Project,
-    val scope: CoroutineScope
+    val project: Project, val scope: CoroutineScope
 ) {
 
     private suspend fun getReferences(itemGroup: XmlTag): List<ReferenceXML> {
         val refs = ArrayList<ReferenceXML>()
 
-        if (itemGroup.isEmpty)
-            return emptyList()
+        val empty = readActionBlocking { itemGroup.isEmpty }
+        if (empty) return emptyList()
 
-        itemGroup.subTags.forEach {
-            if (it.subTags.isNotEmpty()) {
-                val text = readActionBlocking {
-                    it.text
+        readActionBlocking {
+            itemGroup.subTags.forEach {
+                if (it.subTags.isNotEmpty()) {
+                    val text = it.text
+
+                    val ref = ProjectUtils.xmlParser.readValue<ReferenceXML>(text)
+
+                    refs.add(ref)
                 }
-                val ref = ProjectUtils.xmlParser.readValue<ReferenceXML>(text)
-
-                refs.add(ref)
             }
         }
 
@@ -71,15 +72,16 @@ class BeatSaberReferenceManager(
             else -> itemGroupRoot.addSubTag(itemGroupParam, false)
         }
 
-        require(itemGroup.isWritable) { "Cannot write to tag!" }
-        require(itemGroup.containingFile.isWritable) { "Cannot write to file!" }
-
+        readAction {
+            require(itemGroup.isWritable) { "Cannot write to tag!" }
+            require(itemGroup.containingFile.isWritable) { "Cannot write to file!" }
+        }
 
         // I hate this
-        writeAction {
+        // This allows for undo
+        WriteCommandAction.runWriteCommandAction(project, "Add References", null, {
             refsToAdd.forEach { ref ->
-                val tag =
-                    itemGroup.createChildTag("Reference", null, ref.toXMLNoRoot().replace("\r\n", "\n"), false);
+                val tag = itemGroup.createChildTag("Reference", null, ref.toXMLNoRoot().replace("\r\n", "\n"), false);
 
                 val includeName = Path(ref.stringHintPath).nameWithoutExtension
 
@@ -99,7 +101,7 @@ class BeatSaberReferenceManager(
                     itemGroup.addSubTag(tag, false)
                 }
             }
-        }
+        })
 
         project.service<ProjectUtils>().refreshProjectManually(listOf(projectData), listOf(csprojFile.toIOFile()))
 
@@ -140,9 +142,8 @@ class BeatSaberReferenceManager(
         val refs = getReferences(itemGroup)
 
         // Find beat saber dir
-        val path =
-            project.getBeatSaberSelectedDir()
-                ?: throw IllegalAccessException("No user csproj file found ${project.projectFilePath}:${project.name}") // TODO: Make this get the beat saber dir from csproj.user?
+        val path = project.getBeatSaberSelectedDir()
+            ?: throw IllegalAccessException("No user csproj file found ${project.projectFilePath}:${project.name}") // TODO: Make this get the beat saber dir from csproj.user?
 
         val managedPath = BeatSaberUtils.getAssembliesOfBeatSaber(path)
         val libsPath = BeatSaberUtils.getLibsOfBeatSaber(path)
@@ -170,12 +171,7 @@ class BeatSaberReferenceManager(
         }
 
         writeReferences(
-            csprojFile,
-            itemGroup,
-            csprojFileXML.document?.rootTag!!,
-            xmlRefsFromDialogue,
-            project,
-            projectData
+            csprojFile, itemGroup, csprojFileXML.document?.rootTag!!, xmlRefsFromDialogue, project, projectData
         )
     }
 }

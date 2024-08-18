@@ -7,10 +7,12 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.dataformat.xml.util.DefaultXmlPrettyPrinter
 import com.github.fernthedev.bsmt_rider.BeatSaberFolders
 import com.intellij.ide.SaveAndSyncHandler
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.warmup.util.yieldThroughInvokeLater
 import com.jetbrains.cidr.util.checkCanceled
 import com.jetbrains.rider.model.ReloadCommand
 import com.jetbrains.rider.model.UnloadCommand
@@ -72,31 +74,37 @@ class ProjectUtils(
 
         service<SaveAndSyncHandler>().scheduleSave(SaveAndSyncHandler.SaveTask())
 
-        val command =
-            UnloadCommand(projectIds.toList())
+        yieldThroughInvokeLater()
 
-        project.solution.projectModelTasks.unloadProjects.runUnderProgress(
-            command,
-            project,
-            "Unload ${projects.size} projects...",
-            isCancelable = false,
-            throwFault = false
-        )
+        withContext(Dispatchers.EDT) {
+            val command =
+                UnloadCommand(projectIds.toList())
+
+            project.solution.projectModelTasks.unloadProjects.runUnderProgress(
+                command,
+                project,
+                "Unload ${projects.size} projects...",
+                isCancelable = false,
+                throwFault = false
+            )
 
 
 //        ReloadProjectAction.execute() is the original code
 
-        // We do the same here sadly
-        val command2 =
-            ReloadCommand(projectIds.toList(), withDependencies = true, onlyUnloaded = false);
+            // We do the same here sadly
+            val command2 =
+                ReloadCommand(projectIds.toList(), withDependencies = true, onlyUnloaded = false);
 
-        project.solution.projectModelTasks.reloadProjects.runUnderProgress(
-            command2,
-            project,
-            "Reload ${projects.size} projects...",
-            isCancelable = false,
-            throwFault = false,
-        )
+
+            project.solution.projectModelTasks.reloadProjects.runUnderProgress(
+                command2,
+                project,
+                "Reload ${projects.size} projects...",
+                isCancelable = false,
+                throwFault = false,
+            )
+
+        }
 
         withContext(Dispatchers.IO) {
             checkCanceled()
