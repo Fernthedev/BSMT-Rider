@@ -190,6 +190,10 @@ tasks.prepareSandbox {
             val file = file(f)
             if (!file.exists()) throw RuntimeException("File ${file} does not exist")
         })
+
+        into("${intellijPlatform.pluginConfiguration.name.get()}/projectTemplates") {
+            from("projectTemplates")
+        }
     }
 }
 
