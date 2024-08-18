@@ -7,6 +7,7 @@ import com.github.fernthedev.bsmt_rider.xml.ReferenceXML
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.readActionBlocking
+import com.intellij.openapi.application.writeAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -72,26 +73,28 @@ class BeatSaberReferenceManager(
 
 
         // I hate this
-        refsToAdd.forEach { ref ->
-            val tag =
-                itemGroup.createChildTag("Reference", null, ref.toXMLNoRoot().replace("\r\n", "\n"), false);
+        writeAction {
+            refsToAdd.forEach { ref ->
+                val tag =
+                    itemGroup.createChildTag("Reference", null, ref.toXMLNoRoot().replace("\r\n", "\n"), false);
 
-            val includeName = Path(ref.stringHintPath).nameWithoutExtension
+                val includeName = Path(ref.stringHintPath).nameWithoutExtension
 
-            val include = includeName.replace("\r\n", "\n")
-            tag.setAttribute("Include", include)
+                val include = includeName.replace("\r\n", "\n")
+                tag.setAttribute("Include", include)
 
-            var added = false
-            for (subTag in itemGroup.subTags) {
-                val nextInclude = subTag.getAttributeValue("Include")
-                if (nextInclude != null && nextInclude > include) {
-                    itemGroup.addBefore(tag, subTag)
-                    added = true
-                    break
+                var added = false
+                for (subTag in itemGroup.subTags) {
+                    val nextInclude = subTag.getAttributeValue("Include")
+                    if (nextInclude != null && nextInclude > include) {
+                        itemGroup.addBefore(tag, subTag)
+                        added = true
+                        break
+                    }
                 }
-            }
-            if (!added) {
-                itemGroup.addSubTag(tag, false)
+                if (!added) {
+                    itemGroup.addSubTag(tag, false)
+                }
             }
         }
 
@@ -107,16 +110,19 @@ class BeatSaberReferenceManager(
         val projectRdData: RdProjectDescriptor = projectData.descriptor as RdProjectDescriptor
         val projectLocation = projectRdData.location as RdCustomLocation
 
-        val csprojFile: VirtualFile = VfsUtil.findFileByIoFile(File(projectLocation.customLocation), true)!!
+        val csprojFile: VirtualFile = readActionBlocking {
+            VfsUtil.findFileByIoFile(File(projectLocation.customLocation), true)!!
+        }
 
+        val csprojFileXML = readActionBlocking {
+            PsiManager.getInstance(project).findFile(csprojFile) as XmlFile
+        }
 
-
-        val (csprojFileXML, itemGroup, refs) = readActionBlocking {
+        val itemGroup = readActionBlocking {
             // I hate PSI
-            val csprojFileXML = PsiManager.getInstance(project).findFile(csprojFile) as XmlFile
             val groups = csprojFileXML.document?.rootTag?.findSubTags("ItemGroup")
 
-            val itemGroup = when (val foundItemGroup =
+            when (val foundItemGroup =
                 groups?.firstOrNull { itemGroup -> itemGroup.subTags.any { it.name == "Reference" } }) {
                 null -> {
                     XmlElementFactory.getInstance(project).createTagFromText("<ItemGroup></ItemGroup>")
@@ -126,9 +132,9 @@ class BeatSaberReferenceManager(
                     foundItemGroup
                 }
             }
-
-            Triple(csprojFileXML, itemGroup, getReferences(itemGroup))
         }
+
+        val refs = getReferences(itemGroup)
 
         // Find beat saber dir
         val path =
