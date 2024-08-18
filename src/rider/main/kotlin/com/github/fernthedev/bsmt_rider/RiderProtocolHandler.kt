@@ -16,26 +16,26 @@ private class RiderProtocolHandler {
     }
 
 
-    val bsmtRidermodel: BSMT_RiderModel
+//    val bsmtRidermodel: BSMT_RiderModel
 
 
     init {
         val protocol = ProtocolManager.createProtocol(ApplicationManager.getApplication(), Lifetime.Eternal)
-        bsmtRidermodel = BSMT_RiderModel.create(ApplicationManager.getApplication().lifetime, protocol)
+//        bsmtRidermodel = BSMT_RiderModel(ApplicationManager.getApplication().lifetime, protocol)
 
         ApplicationManager.getApplication().invokeLater {
 
 //            val protocol = IdeBackend.allBackends.first().protocol
 
 
-            bsmtRidermodel.getUserSettings.set { _ ->
-                val instance = AppSettingsState.instance
-                ConfigSettings(
-                    isDefaultBeatSaberLocation = instance.useDefaultFolder,
-                    defaultBeatSaberLocation = instance.defaultFolder,
-                    configuredBeatSaberLocations = instance.beatSaberFolders
-                )
-            }
+//            bsmtRidermodel.getUserSettings.set { _ ->
+//                val instance = AppSettingsState.instance
+//                ConfigSettings(
+//                    isDefaultBeatSaberLocation = instance.useDefaultFolder,
+//                    defaultBeatSaberLocation = instance.defaultFolder,
+//                    configuredBeatSaberLocations = instance.beatSaberFolders
+//                )
+//            }
         }
 
         //            RiderProtocolHandler.bsmtRidermodel.foundBeatSaberLocations.start(Lifetime.Eternal, null).result.adviseOnce(

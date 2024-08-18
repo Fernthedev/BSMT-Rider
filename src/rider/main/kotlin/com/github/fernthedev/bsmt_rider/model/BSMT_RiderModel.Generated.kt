@@ -5,12 +5,8 @@ import com.jetbrains.rd.framework.*
 import com.jetbrains.rd.framework.base.*
 import com.jetbrains.rd.framework.impl.*
 
-import com.jetbrains.rd.util.lifetime.*
-import com.jetbrains.rd.util.reactive.*
 import com.jetbrains.rd.util.string.*
-import com.jetbrains.rd.util.*
 import kotlin.reflect.KClass
-
 
 
 /**
@@ -25,19 +21,13 @@ class BSMT_RiderModel private constructor(
     companion object : ISerializersOwner {
         
         override fun registerSerializersCore(serializers: ISerializers)  {
-            serializers.register(ConfigSettings)
+            val classLoader = javaClass.classLoader
+            serializers.register(LazyCompanionMarshaller(RdId(4214764704634892408), classLoader, "com.jetbrains.rider.model.ConfigSettings"))
             BSMT_RiderModel.register(serializers)
         }
         
         
-        fun create(lifetime: Lifetime, protocol: IProtocol): BSMT_RiderModel  {
-            BSMT_RiderModel.register(protocol.serializers)
-            
-            return BSMT_RiderModel().apply {
-                identify(protocol.identity, RdId.Null.mix("BSMT_RiderModel"))
-//                bind(lifetime, protocol, "BSMT_RiderModel")
-            }
-        }
+        
         
         private val __VoidNullableSerializer = FrameworkMarshallers.Void.nullable()
         private val __StringArraySerializer = FrameworkMarshallers.String.array()
@@ -84,6 +74,8 @@ class BSMT_RiderModel private constructor(
         )
     }
     //contexts
+    //threading
+    override val extThreading: ExtThreadingKind get() = ExtThreadingKind.Default
 }
 
 
@@ -99,6 +91,7 @@ data class ConfigSettings (
     
     companion object : IMarshaller<ConfigSettings> {
         override val _type: KClass<ConfigSettings> = ConfigSettings::class
+        override val id: RdId get() = RdId(4214764704634892408)
         
         @Suppress("UNCHECKED_CAST")
         override fun read(ctx: SerializationCtx, buffer: AbstractBuffer): ConfigSettings  {
@@ -153,4 +146,5 @@ data class ConfigSettings (
     }
     //deepClone
     //contexts
+    //threading
 }
