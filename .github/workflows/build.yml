@@ -18,6 +18,10 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
+        with:
+          # Exclude the local build-cache and keyrings from the directories cached.
+          gradle-home-cache-excludes: |
+            build
 
       - name: Execute Gradle build
         run: |
