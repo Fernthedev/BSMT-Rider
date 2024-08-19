@@ -67,6 +67,7 @@ class ProjectUtils(
 //        }
         ProjectModelViewUpdaterAsync.getInstance(project).requestUpdatePresentation()
 
+
         val projectIds = projects.mapNotNull { it.getId(project) }
 
 
@@ -91,13 +92,14 @@ class ProjectUtils(
 
 //        ReloadProjectAction.execute() is the original code
 
-        yieldThroughInvokeLater()
+        while (project.solution.isLoading.valueOrNull == true) {
+            yieldThroughInvokeLater()
+        }
 
         withContext(Dispatchers.EDT) {
             // We do the same here sadly
             val command2 =
-                ReloadCommand(projectIds.toList(), withDependencies = true, onlyUnloaded = false);
-
+                ReloadCommand(projectIds.toList(), withDependencies = false, onlyUnloaded = false);
 
             project.solution.projectModelTasks.reloadProjects.runUnderProgress(
                 command2,

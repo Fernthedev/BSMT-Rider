@@ -25,6 +25,7 @@ class UserCSProjAction : BeatSaberProjectAction() {
             withBackgroundProgress(project,"Create user.csproj" ) {
                 beatSaberProjectManager.locateFoldersAndGenerate(WorkspaceModel.getInstance(project).findProjects(), true)
             }
+
         }
     }
 
