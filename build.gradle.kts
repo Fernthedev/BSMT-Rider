@@ -167,6 +167,9 @@ tasks.patchPluginXml {
     changeNotes.set(changelogMatches.map {
         it.groups[1]!!.value.replace("(?s)\r?\n".toRegex(), "<br />\n")
     }.take(1).joinToString())
+
+    untilBuild.set("*")   // Compatible with all future versions of the IDE
+
 }
 
 tasks.prepareSandbox {
