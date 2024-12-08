@@ -13,6 +13,7 @@ object BeatSaberUtils {
     fun getAssembliesOfBeatSaber(beatSaberPath: String): String =
         Path(beatSaberPath, "Beat Saber_Data", "Managed").toString()
 
+    fun getModLoaderOfBeatSaber(beatSaberPath: String): String = Path(beatSaberPath, "IPA").toString()
 
     fun getLibsOfBeatSaber(beatSaberPath: String): String = Path(beatSaberPath, "Libs").toString()
 

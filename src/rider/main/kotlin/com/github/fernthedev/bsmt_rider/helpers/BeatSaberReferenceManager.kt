@@ -146,12 +146,13 @@ class BeatSaberReferenceManager(
             ?: throw IllegalAccessException("No user csproj file found ${project.projectFilePath}:${project.name}") // TODO: Make this get the beat saber dir from csproj.user?
 
         val managedPath = BeatSaberUtils.getAssembliesOfBeatSaber(path)
+        var ipaPath = BeatSaberUtils.getModLoaderOfBeatSaber(path)
         val libsPath = BeatSaberUtils.getLibsOfBeatSaber(path)
         val pluginsPath = BeatSaberUtils.getPluginsOfBeatSaber(path)
 
         // Open dialog and block until closed
         val refsFromDialogue = withContext(Dispatchers.EDT) {
-            val dialogue = BeatSaberReferencesDialogue(project, arrayOf(managedPath, libsPath, pluginsPath), refs)
+            val dialogue = BeatSaberReferencesDialogue(project, arrayOf(managedPath, ipaPath, libsPath, pluginsPath), refs)
 
             if (dialogue.showAndGet()) {
                 dialogue.references
