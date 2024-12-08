@@ -48,7 +48,6 @@
             class="com.github.fernthedev.bsmt_rider.actions.BeatSaberReferenceGeneratorAction"
             text="Add Beat Saber assembly references"
             description="Add Beat Saber reference">
-      <add-to-group group-id="BSMTRider.projectTools" anchor="after" relative-to-action="BSMTRider.generateUserCsProj" />
       <add-to-group group-id="SolutionExplorerPopupMenuForReferenceFolder" />
 <!--      <add-to-group group-id="ToolsMenu" anchor="last"/>-->
 <!--      <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>-->
