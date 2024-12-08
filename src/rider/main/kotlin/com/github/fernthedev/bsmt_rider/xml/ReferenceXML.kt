@@ -10,7 +10,7 @@ import com.intellij.util.xml.DomElement
 data class ReferenceXML(
     @JsonProperty("HintPath")
     @get:JsonProperty("HintPath")
-    val stringHintPath: String,
+    val stringHintPath: String?,
 
     @JsonProperty("Private")
     @get:JsonProperty("Private")
@@ -19,7 +19,7 @@ data class ReferenceXML(
 
     // I really hate that I have to do this
     fun toXMLNoRoot() = """
-        <HintPath>${stringHintPath}</HintPath>
+        ${(stringHintPath?.let { "<HintPath>$it</HintPath>" }) ?: ""}
         <Private>${private}</Private>
     """.trimIndent()
 }

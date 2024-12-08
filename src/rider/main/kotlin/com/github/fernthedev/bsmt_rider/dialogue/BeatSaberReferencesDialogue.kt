@@ -40,7 +40,7 @@ class BeatSaberReferencesDialogue(
             throw IllegalArgumentException("Beat saber folders are empty or not found!")
 
         val existingReferencesMatch = existingReferences.map { ref ->
-            PathUtil.getFileName(ref.stringHintPath)
+            ref.stringHintPath?.let { PathUtil.getFileName(it) }
         }
 
 

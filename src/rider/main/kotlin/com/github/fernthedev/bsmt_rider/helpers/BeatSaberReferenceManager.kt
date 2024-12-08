@@ -83,7 +83,7 @@ class BeatSaberReferenceManager(
             refsToAdd.forEach { ref ->
                 val tag = itemGroup.createChildTag("Reference", null, ref.toXMLNoRoot().replace("\r\n", "\n"), false);
 
-                val includeName = Path(ref.stringHintPath).nameWithoutExtension
+                val includeName = Path(ref.stringHintPath!!).nameWithoutExtension
 
                 val include = includeName.replace("\r\n", "\n")
                 tag.setAttribute("Include", include)
