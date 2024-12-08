@@ -55,8 +55,8 @@ class BeatSaberChooseDialogue(val project: Project?) : DialogWrapper(project) {
         beatSaberInput.componentPopupMenu?.isVisible = AppSettingsState.instance.beatSaberFolders.isNotEmpty()
         beatSaberInput.isEditable = true
 
-        setAsDefault = CheckBox("Set this beat saber folder as default")
-        addToConfigCheckbox = CheckBox("Store this beat saber folder in config")
+        setAsDefault = CheckBox("Set as default")
+        addToConfigCheckbox = CheckBox("Store in config")
 
         // logic
 
