@@ -107,11 +107,11 @@ class BeatSaberReferenceManager(
 
     }
 
-    suspend fun askToAddReferences() {
+    suspend fun askToAddReferences(projectName: String) {
         require(!ApplicationManager.getApplication().isDispatchThread)
 
         val projectData: ProjectModelEntity =
-            WorkspaceModel.getInstance(project).findProjectsByName(project.name).first()
+            WorkspaceModel.getInstance(project).findProjectsByName(projectName).first()
         val projectRdData: RdProjectDescriptor = projectData.descriptor as RdProjectDescriptor
         val projectLocation = projectRdData.location as RdCustomLocation
 
