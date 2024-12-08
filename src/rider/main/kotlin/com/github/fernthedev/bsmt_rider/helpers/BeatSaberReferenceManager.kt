@@ -28,6 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import kotlin.collections.ArrayList
 import kotlin.io.path.Path
 import kotlin.io.path.nameWithoutExtension
 
@@ -43,7 +44,7 @@ class BeatSaberReferenceManager(
         if (empty) return emptyList()
 
         readActionBlocking {
-            itemGroup.subTags.forEach {
+            itemGroup.subTags.filter{ it.name == "Reference" }.forEach {
                 if (it.subTags.isNotEmpty()) {
                     val text = it.text
 
@@ -76,6 +77,9 @@ class BeatSaberReferenceManager(
             require(itemGroup.isWritable) { "Cannot write to tag!" }
             require(itemGroup.containingFile.isWritable) { "Cannot write to file!" }
         }
+        
+        val references = itemGroup.subTags.filter { it.name == "Reference" }
+        val subTags = references.map { it.copy() as XmlTag }.toMutableList()
 
         // I hate this
         // This allows for undo
@@ -88,18 +92,12 @@ class BeatSaberReferenceManager(
                 val include = includeName.replace("\r\n", "\n")
                 tag.setAttribute("Include", include)
 
-                var added = false
-                for (subTag in itemGroup.subTags) {
-                    val nextInclude = subTag.getAttributeValue("Include")
-                    if (nextInclude != null && nextInclude > include) {
-                        itemGroup.addBefore(tag, subTag)
-                        added = true
-                        break
-                    }
-                }
-                if (!added) {
-                    itemGroup.addSubTag(tag, false)
-                }
+                subTags.add(tag)
+            }
+
+            references.forEach { it.delete() }
+            subTags.sortedBy { it.getAttributeValue("Include")?.lowercase() }.forEach {
+                itemGroup.addSubTag(it, false)
             }
         })
 
