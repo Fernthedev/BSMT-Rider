@@ -92,9 +92,7 @@ class ProjectUtils(
 
 //        ReloadProjectAction.execute() is the original code
 
-        while (project.solution.isLoading.valueOrNull == true) {
-            yieldThroughInvokeLater()
-        }
+        yieldThroughInvokeLater()
 
         withContext(Dispatchers.EDT) {
             // We do the same here sadly
