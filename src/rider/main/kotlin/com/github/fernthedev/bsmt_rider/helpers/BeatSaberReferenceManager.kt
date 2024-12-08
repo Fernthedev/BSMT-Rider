@@ -28,6 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import kotlin.collections.ArrayList
 import kotlin.io.path.Path
 import kotlin.io.path.nameWithoutExtension
 
@@ -43,7 +44,7 @@ class BeatSaberReferenceManager(
         if (empty) return emptyList()
 
         readActionBlocking {
-            itemGroup.subTags.forEach {
+            itemGroup.subTags.filter{ it.name == "Reference" }.forEach {
                 if (it.subTags.isNotEmpty()) {
                     val text = it.text
 
@@ -76,6 +77,9 @@ class BeatSaberReferenceManager(
             require(itemGroup.isWritable) { "Cannot write to tag!" }
             require(itemGroup.containingFile.isWritable) { "Cannot write to file!" }
         }
+        
+        val references = itemGroup.subTags.filter { it.name == "Reference" }
+        val subTags = references.map { it.copy() as XmlTag }.toMutableList()
 
         // I hate this
         // This allows for undo
@@ -83,23 +87,17 @@ class BeatSaberReferenceManager(
             refsToAdd.forEach { ref ->
                 val tag = itemGroup.createChildTag("Reference", null, ref.toXMLNoRoot().replace("\r\n", "\n"), false);
 
-                val includeName = Path(ref.stringHintPath).nameWithoutExtension
+                val includeName = Path(ref.stringHintPath!!).nameWithoutExtension
 
                 val include = includeName.replace("\r\n", "\n")
                 tag.setAttribute("Include", include)
 
-                var added = false
-                for (subTag in itemGroup.subTags) {
-                    val nextInclude = subTag.getAttributeValue("Include")
-                    if (nextInclude != null && nextInclude > include) {
-                        itemGroup.addBefore(tag, subTag)
-                        added = true
-                        break
-                    }
-                }
-                if (!added) {
-                    itemGroup.addSubTag(tag, false)
-                }
+                subTags.add(tag)
+            }
+
+            references.forEach { it.delete() }
+            subTags.sortedBy { it.getAttributeValue("Include")?.lowercase() }.forEach {
+                itemGroup.addSubTag(it, false)
             }
         })
 
@@ -107,11 +105,11 @@ class BeatSaberReferenceManager(
 
     }
 
-    suspend fun askToAddReferences() {
+    suspend fun askToAddReferences(projectName: String) {
         require(!ApplicationManager.getApplication().isDispatchThread)
 
         val projectData: ProjectModelEntity =
-            WorkspaceModel.getInstance(project).findProjectsByName(project.name).first()
+            WorkspaceModel.getInstance(project).findProjectsByName(projectName).first()
         val projectRdData: RdProjectDescriptor = projectData.descriptor as RdProjectDescriptor
         val projectLocation = projectRdData.location as RdCustomLocation
 
@@ -146,12 +144,13 @@ class BeatSaberReferenceManager(
             ?: throw IllegalAccessException("No user csproj file found ${project.projectFilePath}:${project.name}") // TODO: Make this get the beat saber dir from csproj.user?
 
         val managedPath = BeatSaberUtils.getAssembliesOfBeatSaber(path)
+        var ipaPath = BeatSaberUtils.getModLoaderOfBeatSaber(path)
         val libsPath = BeatSaberUtils.getLibsOfBeatSaber(path)
         val pluginsPath = BeatSaberUtils.getPluginsOfBeatSaber(path)
 
         // Open dialog and block until closed
         val refsFromDialogue = withContext(Dispatchers.EDT) {
-            val dialogue = BeatSaberReferencesDialogue(project, arrayOf(managedPath, libsPath, pluginsPath), refs)
+            val dialogue = BeatSaberReferencesDialogue(project, arrayOf(managedPath, ipaPath, libsPath, pluginsPath), refs)
 
             if (dialogue.showAndGet()) {
                 dialogue.references

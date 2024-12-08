@@ -9,6 +9,7 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.components.service
 import com.intellij.platform.backend.workspace.WorkspaceModel
 import com.jetbrains.rider.projectView.hasSolution
+import com.jetbrains.rider.projectView.solution
 import com.jetbrains.rider.projectView.workspace.ProjectModelEntity
 import com.jetbrains.rider.projectView.workspace.findProjects
 import kotlinx.coroutines.launch
@@ -27,7 +28,8 @@ abstract class BeatSaberProjectAction : AnAction() {
             return
         }
 
-        e.presentation.isEnabledAndVisible = project.hasSolution == true
+        e.presentation.isVisible = project.hasSolution == true
+        e.presentation.isEnabled = project.solution.solutionLifecycle.fullStartupFinished.valueOrNull?.fullStartupTime != null
 
         findProjects = WorkspaceModel.getInstance(project).findProjects()
         val beatSaberProjectManager = project.service<BeatSaberProjectManager>()
