@@ -35,10 +35,12 @@ fun <V : Any?> runReadActionSafely(runnable: () -> V): V {
 fun runWriteActionSafely(runnable: () -> Unit) {
     if (ApplicationManager.getApplication().isWriteAccessAllowed) {
         runnable();
+        return
     }
 
     if (ApplicationManager.getApplication().isDispatchThread) {
         runWriteAction(runnable);
+        return
     }
 
     invokeLater {
