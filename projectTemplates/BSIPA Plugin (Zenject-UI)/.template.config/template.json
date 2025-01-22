@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json.schemastore.org/template",
+  "author": "qqrz997",
+  "classifications": [
+    "Common", 
+    "Library"
+  ],
+  "identity": "BSIPA.Plugin.Zenject-UI",
+  "name": "BSIPA Plugin (Zenject-UI)",
+  "defaultName": "BeatSaberPlugin",
+  "description": "A template for a new Beat Saber IPA mod with a basic Zenject and UI setup using SiraUtil and BeatSaberMarkupLanguage.",
+  "shortName": "bszenjectui",
+  "sourceName": "ZenjectMenuPlugin",
+  "tags": {
+    "language": "C#",
+    "type": "project",
+    "platform": ".NET"
+  },
+  "preferNameDirectory": true,
+  "symbols": {
+    "ModVersion": {
+      "type": "parameter",
+      "description": "The version of the mod. Must be of format major.minor.patch.",
+      "datatype": "text",
+      "replaces": "{ModVersion}",
+      "defaultValue": "0.0.1",
+      "displayName": "Mod Version"
+    },
+    "ModAuthor": {
+      "type": "parameter",
+      "description": "The name of who is developing the mod.",
+      "datatype": "text",
+      "replaces": "{ModAuthor}",
+      "displayName": "Author",
+      "defaultValue": ""
+    },
+    "ModDescription": {
+      "type": "parameter",
+      "description": "A short sentence describing the mod's features.",
+      "datatype": "text",
+      "replaces": "{ModDescription}",
+      "displayName": "Description",
+      "defaultValue": ""
+    },
+    "GameVersion": {
+      "type": "parameter",
+      "description": "Version of the game you are developing for.",
+      "datatype": "text",
+      "replaces": "{GameVersion}",
+      "displayName": "Game Version",
+      "defaultValue": "1.40.0"
+    },
+    "Nullable": {
+      "type": "parameter",
+      "description": "Use nullable reference types. (Recommended)",
+      "datatype": "bool",
+      "replaces": "{Nullable}",
+      "defaultValue": "true"
+    },
+    "EnableHints": {
+      "type": "parameter",
+      "description": "Includes code comments that provide helpful information.",
+      "datatype": "bool",
+      "displayName": "Enable Hints",
+      "defaultValue": "true"
+    }
+  },
+  "primaryOutputs": [
+    {"path": "Plugin.cs" }
+  ],
+  "postActions": [
+    {
+      "condition": "(HostIdentifier != \"dotnetcli\")",
+      "description": "Opens Plugin.cs in the editor",
+      "manualInstructions": [ ],
+      "actionId": "84C0DA21-51C8-4541-9940-6CA19AF04EE6",
+      "args": {
+        "files": "0"
+      },
+      "continueOnError": true
+    }
+  ]
+}

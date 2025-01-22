@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- This file contains project properties used by the build. -->
+<Project>
+
+  <!-- Plugin Metadata -->
+  <PropertyGroup>
+    <PluginId>MenuPlugin</PluginId>
+    <PluginName>MenuPlugin</PluginName>
+    <Authors>{ModAuthor}</Authors>
+    <Version>{ModVersion}</Version>
+    <GameVersion>{GameVersion}</GameVersion>
+    <Description>{ModDescription}</Description>
+    <!--<PluginIcon></PluginIcon>-->
+    <!--<ProjectSource></ProjectSource>-->
+    <!--<ProjectHome></ProjectHome>-->
+    <!--<DonateUrl></DonateUrl>-->
+  </PropertyGroup>
+
+  <!-- Plugin Dependencies -->
+  <ItemGroup>
+    <DependsOn Include="BSIPA" Version="^4.3.0"/>
+    <DependsOn Include="BeatSaberMarkupLanguage" Version="^1.12.0"/>
+  </ItemGroup>
+  
+  <PropertyGroup>
+    <BSMTProjectType>BSIPA</BSMTProjectType>
+    <GenerateManifest>true</GenerateManifest>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)' != 'Release'">
+    <DisableZipRelease>true</DisableZipRelease>
+  </PropertyGroup>
+  
+</Project>
